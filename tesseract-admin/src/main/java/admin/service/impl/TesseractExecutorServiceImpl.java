@@ -1,10 +1,12 @@
 package admin.service.impl;
 
 import admin.entity.TesseractExecutor;
+import admin.entity.TesseractExecutorTriggerLink;
 import admin.entity.TesseractJobDetail;
 import admin.entity.TesseractTrigger;
 import admin.mapper.TesseractExecutorMapper;
 import admin.service.ITesseractExecutorService;
+import admin.service.ITesseractExecutorTriggerLinkService;
 import admin.service.ITesseractJobDetailService;
 import admin.service.ITesseractTriggerService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -38,6 +40,8 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
     @Autowired
     private ITesseractTriggerService tesseractTriggerService;
     @Autowired
+    private ITesseractExecutorTriggerLinkService triggerLinkService;
+    @Autowired
     private ITesseractJobDetailService jobDetailService;
 
     @Override
@@ -50,7 +54,7 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
 
     private TesseractAdminRegistryResDTO toRegistry(String socket, List<TesseractAdminJobDetailDTO> tesseractAdminJobDetailDTOList) {
         // 注册主机
-        registryExecutor(socket);
+        final TesseractExecutor executor = registryExecutor(socket);
         final List<String> notTriggerNameList = Collections.synchronizedList(Lists.newArrayList());
         final List<String> repeatJobList = Collections.synchronizedList(Lists.newArrayList());
         List<TesseractJobDetail> jobDetailList = Collections.synchronizedList(Lists.newArrayList());
@@ -67,6 +71,8 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
                         notTriggerNameList.add(triggerName);
                         return;
                     }
+                    //找到trigger需要和executor绑定
+                    bindExecutor(executor, trigger);
                     //以防任务重复注册，添加进job
                     QueryWrapper<TesseractJobDetail> jobDetailQueryWrapper = new QueryWrapper<>();
                     TesseractJobDetail jobDetail = jobDetailService.getOne(jobDetailQueryWrapper);
@@ -91,17 +97,39 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
     }
 
     /**
+     * 将触发器和执行器绑定
+     *
+     * @param executor
+     */
+    private void bindExecutor(TesseractExecutor executor, TesseractTrigger trigger) {
+        //防止重复插入
+        Integer executorId = executor.getId();
+        Integer triggerId = trigger.getId();
+        QueryWrapper<TesseractExecutorTriggerLink> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(TesseractExecutorTriggerLink::getTriggerId, triggerId).eq(TesseractExecutorTriggerLink::getExecutorId, executorId);
+        TesseractExecutorTriggerLink tesseractExecutorTriggerLink = triggerLinkService.getOne(queryWrapper);
+        if (tesseractExecutorTriggerLink != null) {
+            log.error("执行器触发器关联{}已存在，将忽略注册", tesseractExecutorTriggerLink);
+            return;
+        }
+        tesseractExecutorTriggerLink = new TesseractExecutorTriggerLink();
+        tesseractExecutorTriggerLink.setExecutorId(executorId);
+        tesseractExecutorTriggerLink.setTriggerId(triggerId);
+        triggerLinkService.save(tesseractExecutorTriggerLink);
+    }
+
+    /**
      * 注册主机
      *
      * @param socket
      */
-    private void registryExecutor(String socket) {
+    private TesseractExecutor registryExecutor(String socket) {
         QueryWrapper<TesseractExecutor> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().eq(TesseractExecutor::getSocket, socket);
         TesseractExecutor executor = getOne(queryWrapper);
         if (executor != null) {
-            log.error("执行{}已存在，将忽略注册", executor);
-            return;
+            log.error("执行器{}已存在，将忽略注册", executor);
+            return executor;
         }
         executor = new TesseractExecutor();
         executor.setCreateTime(System.currentTimeMillis());
@@ -109,5 +137,6 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
         executor.setSocket(socket);
         executor.setUpdateTime(System.currentTimeMillis());
         this.save(executor);
+        return executor;
     }
 }
