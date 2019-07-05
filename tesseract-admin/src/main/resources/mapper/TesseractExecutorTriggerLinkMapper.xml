@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="admin.mapper.TesseractExecutorTriggerLinkMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="admin.entity.TesseractExecutorTriggerLink">
+        <id column="id" property="id" />
+        <result column="trigger_id" property="triggerId" />
+        <result column="executor_id" property="executorId" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, trigger_id, executor_id
+    </sql>
+
+</mapper>

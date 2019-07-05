@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="admin.mapper.TesseractLogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="admin.entity.TesseractLog">
+        <id column="id" property="id" />
+        <result column="job_name" property="jobName" />
+        <result column="trigger_name" property="triggerName" />
+        <result column="socket" property="socket" />
+        <result column="status" property="status" />
+        <result column="msg" property="msg" />
+        <result column="creator" property="creator" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, job_name, trigger_name, socket, status, msg, creator, create_time
+    </sql>
+
+</mapper>

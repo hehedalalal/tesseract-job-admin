@@ -1,0 +1,54 @@
+package admin.controller;
+
+
+import admin.entity.TesseractTrigger;
+import admin.pojo.CommonResponseVO;
+import admin.pojo.PageVO;
+import admin.pojo.TriggerVO;
+import admin.service.ITesseractTriggerService;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+
+/**
+ * <p>
+ * 前端控制器
+ * </p>
+ *
+ * @author nickle
+ * @since 2019-07-03
+ */
+@RestController
+@RequestMapping("/tesseract-trigger")
+public class TesseractTriggerController {
+    @Autowired
+    private ITesseractTriggerService tesseractTriggerService;
+
+    @GetMapping("/trigger")
+    public CommonResponseVO tesseractTriggerList(@NotNull @Min(1) Integer currentPage, @NotNull @Min(1) @Max(50) Integer pageSize) {
+        IPage<TesseractTrigger> tesseractTriggerIPage = tesseractTriggerService.listByPage(currentPage, pageSize);
+        TriggerVO triggerVO = new TriggerVO();
+        PageVO pageVO = new PageVO();
+        pageVO.setCurrentPage(tesseractTriggerIPage.getCurrent());
+        pageVO.setPageSize(tesseractTriggerIPage.getSize());
+        pageVO.setTotal(tesseractTriggerIPage.getTotal());
+        triggerVO.setPageInfo(pageVO);
+        triggerVO.setTriggerList(tesseractTriggerIPage.getRecords());
+        CommonResponseVO success = CommonResponseVO.SUCCESS;
+        success.setBody(triggerVO);
+        return success;
+    }
+
+    @PostMapping("/addTrigger")
+    public CommonResponseVO addTrigger(@Validated @RequestBody TesseractTrigger tesseractTrigger) {
+        tesseractTriggerService.save(tesseractTrigger);
+        return CommonResponseVO.SUCCESS;
+    }
+
+}
+
