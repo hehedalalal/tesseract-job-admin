@@ -23,7 +23,9 @@ create table tesseract_trigger(
 	creator varchar(255) not null,
 	description text not null,
 	create_time bigint not null,
-	update_time bigint not null
+	update_time bigint not null,
+	index(status),
+	unique(name)
 ) engine=InnoDB default charset=utf8;
 
 
@@ -32,13 +34,15 @@ create table tesseract_executor(
 	name varchar(30) not null,
 	socket varchar(255) not null,
 	create_time bigint not null,
-	update_time bigint not null
+	update_time bigint not null,
+	unique(socket)
 ) engine=InnoDB default charset=utf8;
 
 create table tesseract_executor_trigger_link(
 	id int unsigned primary key auto_increment,
 	trigger_id int unsigned not null,
-	executor_id int unsigned not null
+	executor_id int unsigned not null,
+	unique(trigger_id,executor_id)
 ) engine=InnoDB default charset=utf8;
 
 
@@ -52,7 +56,7 @@ create table tesseract_user(
 	name varchar(30) not null,
 	password varchar(32) not null,
 	create_time bigint not null,
-	token varchar(255) not null default "",
+	token varchar(255) not null default '',
 	update_time bigint not null
 ) engine=InnoDB default charset=utf8;
 
