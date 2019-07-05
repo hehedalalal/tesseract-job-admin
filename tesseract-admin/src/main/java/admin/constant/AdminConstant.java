@@ -19,7 +19,7 @@ public class AdminConstant {
      * 锁相关
      */
     public static final String TRIGGER_LOCK_NAME = "TRIGGER_LOCK";
-
+    public static final String JOB_LOCK_NAME = "JOB_LOCK";
     /**
      * 调度策略
      */

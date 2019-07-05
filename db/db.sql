@@ -6,7 +6,8 @@ create table tesseract_job_detail(
 	trigger_id int unsigned not null,
 	class_name varchar(255) not null,
 	create_time bigint not null,
-	creator varchar(255) not null
+	creator varchar(255) not null,
+	unique(trigger_id,class_name)
 ) engine=InnoDB default charset=utf8;
 
 create table tesseract_trigger(

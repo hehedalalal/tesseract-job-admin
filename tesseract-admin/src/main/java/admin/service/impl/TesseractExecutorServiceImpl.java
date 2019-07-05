@@ -89,6 +89,7 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
                     jobDetailList.add(jobDetail);
                 }
         );
+        // todo 由于多实例并发，这里插入任务需要加锁 目前占时采用 数据库唯一索引来保证不重复
         jobDetailService.saveBatch(jobDetailList);
         TesseractAdminRegistryResDTO tesseractAdminRegistryResDTO = new TesseractAdminRegistryResDTO();
         tesseractAdminRegistryResDTO.setNotTriggerNameList(notTriggerNameList);
