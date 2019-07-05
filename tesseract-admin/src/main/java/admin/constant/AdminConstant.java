@@ -11,7 +11,6 @@ public class AdminConstant {
     /**
      * 相关
      */
-    public static final String NULL_JOB_NAME = "";
     public static final String NULL_SOCKET = "";
     public static final Integer LOG_WAIT = 2;
     public static final Integer LOG_SUCCESS = 1;

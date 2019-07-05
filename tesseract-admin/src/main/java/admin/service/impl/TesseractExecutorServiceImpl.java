@@ -16,10 +16,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tesseract.core.dto.TesseractAdminJobDetailDTO;
 import tesseract.core.dto.TesseractAdminRegistryRequest;
+import tesseract.core.dto.TesseractAdminRegistryResDTO;
 import tesseract.exception.TesseractException;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,15 +42,15 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
     private ITesseractJobDetailService jobDetailService;
 
     @Override
-    public void registry(TesseractAdminRegistryRequest tesseractAdminRegistryRequest) throws Exception {
+    public TesseractAdminRegistryResDTO registry(TesseractAdminRegistryRequest tesseractAdminRegistryRequest) throws Exception {
         @NotBlank String ip = tesseractAdminRegistryRequest.getIp();
         @NotNull Integer port = tesseractAdminRegistryRequest.getPort();
         String socket = ip + ":" + port;
         checkSocket(socket);
-        toRegistry(socket, tesseractAdminRegistryRequest.getTesseractAdminJobDetailDTOList());
+        return toRegistry(socket, tesseractAdminRegistryRequest.getTesseractAdminJobDetailDTOList());
     }
 
-    private void toRegistry(String socket, List<TesseractAdminJobDetailDTO> tesseractAdminJobDetailDTOList) {
+    private TesseractAdminRegistryResDTO toRegistry(String socket, List<TesseractAdminJobDetailDTO> tesseractAdminJobDetailDTOList) {
         // 注册主机
         TesseractExecutor executor = new TesseractExecutor();
         executor.setCreateTime(System.currentTimeMillis());
@@ -56,32 +58,43 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
         executor.setSocket(socket);
         executor.setUpdateTime(System.currentTimeMillis());
         this.save(executor);
-        final List<String> notTriggerNameList = Lists.newArrayList();
-        List<TesseractJobDetail> jobDetailList = Lists.newArrayList();
+        final List<String> notTriggerNameList = Collections.synchronizedList(Lists.newArrayList());
+        final List<String> repeatJobList = Collections.synchronizedList(Lists.newArrayList());
+        List<TesseractJobDetail> jobDetailList = Collections.synchronizedList(Lists.newArrayList());
         //保存job
         tesseractAdminJobDetailDTOList.parallelStream().forEach(tesseractAdminJobDetailDTO -> {
                     @NotBlank String className = tesseractAdminJobDetailDTO.getClassName();
                     @NotBlank String triggerName = tesseractAdminJobDetailDTO.getTriggerName();
-                    @NotBlank String jobName = tesseractAdminJobDetailDTO.getJobName();
-                    @NotBlank String description = tesseractAdminJobDetailDTO.getDescription();
                     //检测trigger
                     QueryWrapper<TesseractTrigger> queryWrapper = new QueryWrapper<>();
                     queryWrapper.lambda().eq(TesseractTrigger::getName, triggerName);
-                    if (tesseractTriggerService.getOne(queryWrapper) == null) {
+                    TesseractTrigger trigger = tesseractTriggerService.getOne(queryWrapper);
+                    if (trigger == null) {
                         log.warn("触发器{}不存在", triggerName);
                         notTriggerNameList.add(triggerName);
                         return;
                     }
-                    TesseractJobDetail jobDetail = new TesseractJobDetail();
+                    //以防任务重复注册，添加进job
+                    QueryWrapper<TesseractJobDetail> jobDetailQueryWrapper = new QueryWrapper<>();
+                    TesseractJobDetail jobDetail = jobDetailService.getOne(jobDetailQueryWrapper);
+                    if (jobDetail != null) {
+                        log.warn("重复任务{}", jobDetail);
+                        repeatJobList.add(jobDetail.getClassName());
+                        return;
+                    }
+                    jobDetail = new TesseractJobDetail();
                     jobDetail.setClassName(className);
                     jobDetail.setCreator("admin");
-                    jobDetail.setName(jobName);
-                    jobDetail.setDescription(description);
+                    jobDetail.setTriggerId(trigger.getId());
                     jobDetail.setCreateTime(System.currentTimeMillis());
                     jobDetailList.add(jobDetail);
                 }
         );
         jobDetailService.saveBatch(jobDetailList);
+        TesseractAdminRegistryResDTO tesseractAdminRegistryResDTO = new TesseractAdminRegistryResDTO();
+        tesseractAdminRegistryResDTO.setNotTriggerNameList(notTriggerNameList);
+        tesseractAdminRegistryResDTO.setRepeatJobList(repeatJobList);
+        return tesseractAdminRegistryResDTO;
     }
 
     /**

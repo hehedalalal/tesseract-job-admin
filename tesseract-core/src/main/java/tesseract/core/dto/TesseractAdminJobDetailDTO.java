@@ -10,8 +10,4 @@ public class TesseractAdminJobDetailDTO {
     private String className;
     @NotBlank
     private String triggerName;
-    @NotBlank
-    private String jobName;
-    @NotBlank
-    private String description;
 }

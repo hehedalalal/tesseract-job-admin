@@ -1,19 +1,22 @@
 package tesseract.core.executor;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.CollectionUtils;
+import tesseract.core.annotation.ClientJobDetail;
 import tesseract.core.context.ExecutorContext;
-import tesseract.core.dto.TesseractAdminRegistryRequest;
-import tesseract.core.dto.TesseractExecutorRequest;
-import tesseract.core.dto.TesseractExecutorResponse;
+import tesseract.core.dto.*;
 import tesseract.core.handler.JobHandler;
 import tesseract.exception.TesseractException;
 import tesseract.feignService.IClientFeignService;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +31,12 @@ public class TesseractExecutor implements InitializingBean, DisposableBean {
     private IClientFeignService clientFeignService;
     @Value("${tesseract-admin-address}")
     private String adminServerAddress;
+    @Value("${tesseract-executor-localIp}")
+    private String ip;
+    @Value("${server.port}")
+    private Integer port;
+    @Autowired(required = false)
+    private List<ClientJobDetail> clientJobDetailList;
     /**
      * 线程池
      */
@@ -94,13 +103,42 @@ public class TesseractExecutor implements InitializingBean, DisposableBean {
         }
 
         private void registry() throws Exception {
-            TesseractAdminRegistryRequest tesseractAdminRegistryRequest = new TesseractAdminRegistryRequest();
+            log.info("开始注册");
+            if (CollectionUtils.isEmpty(clientJobDetailList)) {
+                log.info("clientJobDetailList 为空，注册停止");
+                Thread.currentThread().interrupt();
+                return;
+            }
+            TesseractAdminRegistryRequest tesseractAdminRegistryRequest = buildRequest();
+            log.info("注册中:{}", tesseractAdminRegistryRequest);
             TesseractExecutorResponse response = clientFeignService.registry(new URI(adminServerAddress + REGISTRY_MAPPING), tesseractAdminRegistryRequest);
             if (response.getStatus() != TesseractExecutorResponse.SUCCESS_STATUS) {
                 log.error("注册异常,状态码：{},信息：{}", response.getStatus(), response.getStatus());
                 throw new TesseractException(response.getMsg());
             }
+            TesseractAdminRegistryResDTO tesseractAdminRegistryResDTO = (TesseractAdminRegistryResDTO) response.getBody();
+            log.info("注册成功,返回信息:{}", tesseractAdminRegistryResDTO);
             isRegistry = true;
+        }
+
+        /**
+         * 构建请求
+         *
+         * @return
+         */
+        private TesseractAdminRegistryRequest buildRequest() {
+            TesseractAdminRegistryRequest tesseractAdminRegistryRequest = new TesseractAdminRegistryRequest();
+            tesseractAdminRegistryRequest.setIp(ip);
+            tesseractAdminRegistryRequest.setPort(port);
+            List<TesseractAdminJobDetailDTO> detailDTOList = Collections.synchronizedList(Lists.newArrayList());
+            clientJobDetailList.parallelStream().forEach(clientJobDetail -> {
+                TesseractAdminJobDetailDTO tesseractAdminJobDetailDTO = new TesseractAdminJobDetailDTO();
+                tesseractAdminJobDetailDTO.setClassName(clientJobDetail.getClassName());
+                tesseractAdminJobDetailDTO.setClassName(clientJobDetail.getTriggerName());
+                detailDTOList.add(tesseractAdminJobDetailDTO);
+            });
+            tesseractAdminRegistryRequest.setTesseractAdminJobDetailDTOList(detailDTOList);
+            return tesseractAdminRegistryRequest;
         }
     }
 }

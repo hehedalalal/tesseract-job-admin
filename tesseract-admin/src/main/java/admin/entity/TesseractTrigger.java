@@ -46,6 +46,8 @@ public class TesseractTrigger implements Serializable {
     private Integer shardingNum;
     @NotNull
     private Integer retryCount;
+    @NotBlank
+    private String description;
 
     private Integer status = TRGGER_STATUS_STOP;
 

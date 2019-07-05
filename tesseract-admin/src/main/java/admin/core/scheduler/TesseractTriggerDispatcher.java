@@ -51,7 +51,7 @@ public class TesseractTriggerDispatcher {
         r.run();
     });
 
-    public void dispachTrigger(List<TesseractTrigger> triggerList) {
+    public void dispatchTrigger(List<TesseractTrigger> triggerList) {
         triggerList.stream().parallel().forEach(trigger -> {
             THREAD_POOL_EXECUTOR.execute(new TaskRunnable(trigger));
         });
@@ -73,14 +73,12 @@ public class TesseractTriggerDispatcher {
                 QueryWrapper<TesseractJobDetail> jobQueryWrapper = new QueryWrapper<>();
                 TesseractJobDetail jobDetail = tesseractJobDetailService.getOne(jobQueryWrapper);
                 if (jobDetail == null) {
-                    tesseractLog.setJobName(NULL_JOB_NAME);
                     tesseractLog.setStatus(LOG_FAIL);
                     tesseractLog.setMsg("没有发现可运行job");
                     tesseractLog.setSocket(NULL_SOCKET);
                     tesseractLogService.save(tesseractLog);
                     return;
                 }
-                tesseractLog.setJobName(jobDetail.getName());
                 //获取执行器
                 QueryWrapper<TesseractExecutorTriggerLink> queryWrapper = new QueryWrapper<>();
                 queryWrapper.lambda().eq(TesseractExecutorTriggerLink::getTriggerId, trigger.getId());

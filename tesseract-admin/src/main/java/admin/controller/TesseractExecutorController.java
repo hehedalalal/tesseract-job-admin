@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tesseract.core.dto.TesseractAdminRegistryRequest;
+import tesseract.core.dto.TesseractAdminRegistryResDTO;
 import tesseract.core.dto.TesseractExecutorResponse;
 
 import static tesseract.core.constant.CommonConstant.REGISTRY_MAPPING_SUFFIX;
@@ -27,8 +28,11 @@ public class TesseractExecutorController {
     private ITesseractExecutorService tesseractExecutorService;
 
     @RequestMapping(REGISTRY_MAPPING_SUFFIX)
-    public TesseractExecutorResponse registry(@Validated TesseractAdminRegistryRequest tesseractAdminRegistryRequest) {
-
+    public TesseractExecutorResponse registry(@Validated TesseractAdminRegistryRequest tesseractAdminRegistryRequest) throws Exception {
+        TesseractAdminRegistryResDTO registry = tesseractExecutorService.registry(tesseractAdminRegistryRequest);
+        TesseractExecutorResponse success = TesseractExecutorResponse.SUCCESS;
+        success.setBody(registry);
+        return success;
     }
 
 }

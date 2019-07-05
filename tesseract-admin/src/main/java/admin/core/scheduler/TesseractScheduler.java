@@ -43,7 +43,7 @@ public class TesseractScheduler implements InitializingBean {
                 List<TesseractTrigger> triggerList = tesseractTriggerService.findTriggerWithLock(maxBatchSize, System.currentTimeMillis());
                 log.info("schedulerThread扫描到触发器：{}", triggerList);
                 if (!CollectionUtils.isEmpty(triggerList)) {
-                    tesseractTriggerDispatcher.dispachTrigger(triggerList);
+                    tesseractTriggerDispatcher.dispatchTrigger(triggerList);
                     continue;
                 }
                 try {

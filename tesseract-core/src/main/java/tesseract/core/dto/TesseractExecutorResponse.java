@@ -12,8 +12,9 @@ public class TesseractExecutorResponse {
     public static final String SUCCESS_MSG = "SUCCESS";
     public static final int FAIL_STAUTS = 500;
     public static final String FAIL_MSG = "FAILED";
-    public static final TesseractExecutorResponse SUCCESS = new TesseractExecutorResponse(SUCCESS_STATUS, SUCCESS_MSG);
-    public static final TesseractExecutorResponse FAIL = new TesseractExecutorResponse(FAIL_STAUTS, FAIL_MSG);
+    public static final TesseractExecutorResponse SUCCESS = new TesseractExecutorResponse(SUCCESS_STATUS, SUCCESS_MSG, null);
+    public static final TesseractExecutorResponse FAIL = new TesseractExecutorResponse(FAIL_STAUTS, FAIL_MSG, null);
     private int status;
     private String msg;
+    private Object body;
 }
