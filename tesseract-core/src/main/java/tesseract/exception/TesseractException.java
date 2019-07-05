@@ -7,9 +7,16 @@ import lombok.Data;
 @AllArgsConstructor
 public class TesseractException extends RuntimeException {
     private String msg;
+    private Integer status = 500;
 
-    public TesseractException(String msg, String cause) {
-        super(cause);
+    public TesseractException(Integer status, String msg) {
+        super(msg);
+        this.msg = msg;
+        this.status = status;
+    }
+
+    public TesseractException(String msg) {
+        super(msg);
         this.msg = msg;
     }
 }

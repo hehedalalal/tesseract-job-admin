@@ -34,7 +34,8 @@ public class AdminConstant {
     /**
      * 触发器状态
      */
-    public static final Integer TRGGER_STATUS_STOP = 0;
-    public static final Integer TRGGER_STATUS_START = 1;
+    public static final Integer TRGGER_STATUS_STOPING = 0;
+    public static final Integer TRGGER_STATUS_STARTING = 1;
     public static final Integer TRGGER_STATUS_ACCQUIRED = 2;
+    public static final Integer TRGGER_STATUS_EXECUTING = 3;
 }

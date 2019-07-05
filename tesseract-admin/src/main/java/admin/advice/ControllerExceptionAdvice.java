@@ -12,15 +12,13 @@ public class ControllerExceptionAdvice {
 
 
     @ExceptionHandler(TesseractException.class)
-    public CommonResponseVO tesseractExceptionExeceptionHandler(TesseractException e) {
+    public CommonResponseVO tesseractExceptionExceptionHandler(TesseractException e) {
         log.error(e.getMsg());
-        CommonResponseVO fail = CommonResponseVO.FAIL;
-        fail.setMsg(e.getMsg());
-        return fail;
+        return CommonResponseVO.fail(e.getStatus(), e.getMsg());
     }
 
     @ExceptionHandler(Exception.class)
-    public CommonResponseVO commonExeceptionHandler(Exception e) {
+    public CommonResponseVO commonExceptionHandler(Exception e) {
         log.error(e.getMessage());
         return CommonResponseVO.FAIL;
     }

@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import tesseract.core.dto.TesseractAdminJobDetailDTO;
 import tesseract.core.dto.TesseractAdminRegistryRequest;
 import tesseract.core.dto.TesseractAdminRegistryResDTO;
-import tesseract.exception.TesseractException;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -46,18 +45,12 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
         @NotBlank String ip = tesseractAdminRegistryRequest.getIp();
         @NotNull Integer port = tesseractAdminRegistryRequest.getPort();
         String socket = ip + ":" + port;
-        checkSocket(socket);
         return toRegistry(socket, tesseractAdminRegistryRequest.getTesseractAdminJobDetailDTOList());
     }
 
     private TesseractAdminRegistryResDTO toRegistry(String socket, List<TesseractAdminJobDetailDTO> tesseractAdminJobDetailDTOList) {
         // 注册主机
-        TesseractExecutor executor = new TesseractExecutor();
-        executor.setCreateTime(System.currentTimeMillis());
-        executor.setName("default");
-        executor.setSocket(socket);
-        executor.setUpdateTime(System.currentTimeMillis());
-        this.save(executor);
+        registryExecutor(socket);
         final List<String> notTriggerNameList = Collections.synchronizedList(Lists.newArrayList());
         final List<String> repeatJobList = Collections.synchronizedList(Lists.newArrayList());
         List<TesseractJobDetail> jobDetailList = Collections.synchronizedList(Lists.newArrayList());
@@ -84,7 +77,7 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
                     }
                     jobDetail = new TesseractJobDetail();
                     jobDetail.setClassName(className);
-                    jobDetail.setCreator("admin");
+                    jobDetail.setCreator(trigger.getCreator());
                     jobDetail.setTriggerId(trigger.getId());
                     jobDetail.setCreateTime(System.currentTimeMillis());
                     jobDetailList.add(jobDetail);
@@ -98,16 +91,23 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
     }
 
     /**
-     * 以防重复注册
+     * 注册主机
      *
      * @param socket
      */
-    private void checkSocket(String socket) {
+    private void registryExecutor(String socket) {
         QueryWrapper<TesseractExecutor> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().eq(TesseractExecutor::getSocket, socket);
         TesseractExecutor executor = getOne(queryWrapper);
         if (executor != null) {
-            log.error("重复注册:{}", executor);
-            throw new TesseractException("重复注册");
+            log.error("执行{}已存在，将忽略注册", executor);
+            return;
         }
+        executor = new TesseractExecutor();
+        executor.setCreateTime(System.currentTimeMillis());
+        executor.setName("default");
+        executor.setSocket(socket);
+        executor.setUpdateTime(System.currentTimeMillis());
+        this.save(executor);
     }
 }

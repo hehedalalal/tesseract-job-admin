@@ -1,4 +1,4 @@
-package admin.core.scheduler.feignService;
+package feignService;
 
 import feign.RequestLine;
 import org.springframework.cloud.openfeign.FeignClient;

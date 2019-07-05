@@ -25,6 +25,7 @@ import javax.validation.constraints.NotNull;
  */
 @RestController
 @RequestMapping("/tesseract-trigger")
+@Validated
 public class TesseractTriggerController {
     @Autowired
     private ITesseractTriggerService triggerService;

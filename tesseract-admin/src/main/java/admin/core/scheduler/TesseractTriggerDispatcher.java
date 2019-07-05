@@ -1,15 +1,11 @@
 package admin.core.scheduler;
 
-import admin.core.scheduler.feignService.IAdminFeignService;
 import admin.core.scheduler.router.impl.HashRouter;
 import admin.entity.*;
-import admin.service.ITesseractExecutorService;
-import admin.service.ITesseractExecutorTriggerLinkService;
-import admin.service.ITesseractJobDetailService;
-import admin.service.ITesseractLogService;
+import admin.service.*;
+import admin.util.AdminUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import feignService.IAdminFeignService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -18,6 +14,7 @@ import tesseract.core.dto.TesseractExecutorResponse;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -28,7 +25,6 @@ import static admin.constant.AdminConstant.*;
 import static tesseract.core.constant.CommonConstant.EXECUTE_MAPPING;
 
 @Slf4j
-@AllArgsConstructor
 public class TesseractTriggerDispatcher {
     @Autowired
     private ITesseractJobDetailService tesseractJobDetailService;
@@ -38,6 +34,8 @@ public class TesseractTriggerDispatcher {
     private ITesseractExecutorTriggerLinkService triggerLinkService;
     @Autowired
     private ITesseractExecutorService executorService;
+    @Autowired
+    private ITesseractTriggerService triggerService;
     @Autowired
     private IAdminFeignService feignService;
 
@@ -51,24 +49,31 @@ public class TesseractTriggerDispatcher {
         r.run();
     });
 
-    public void dispatchTrigger(List<TesseractTrigger> triggerList) {
-        triggerList.stream().parallel().forEach(trigger -> {
-            THREAD_POOL_EXECUTOR.execute(new TaskRunnable(trigger));
+    public void dispatchTrigger(List<TesseractTrigger> triggerList, boolean isOnce) {
+        triggerList.stream().forEach(trigger -> {
+            //THREAD_POOL_EXECUTOR.execute(new TaskRunnable(trigger, isOnce));
+            new TaskRunnable(trigger, isOnce).run();
         });
     }
 
-    @Data
-    @AllArgsConstructor
     private class TaskRunnable implements Runnable {
         private TesseractTrigger trigger;
+        private boolean isOnce;
+
+        public TaskRunnable(TesseractTrigger trigger, boolean isOnce) {
+            this.trigger = trigger;
+            this.isOnce = isOnce;
+        }
 
         @Override
         public void run() {
             try {
                 TesseractLog tesseractLog = new TesseractLog();
+                tesseractLog.setClassName("");
                 tesseractLog.setCreateTime(System.currentTimeMillis());
                 tesseractLog.setCreator("test");
                 tesseractLog.setTriggerName(trigger.getName());
+                tesseractLog.setEndTime(0L);
                 //获取job detail
                 QueryWrapper<TesseractJobDetail> jobQueryWrapper = new QueryWrapper<>();
                 TesseractJobDetail jobDetail = tesseractJobDetailService.getOne(jobQueryWrapper);
@@ -76,9 +81,13 @@ public class TesseractTriggerDispatcher {
                     tesseractLog.setStatus(LOG_FAIL);
                     tesseractLog.setMsg("没有发现可运行job");
                     tesseractLog.setSocket(NULL_SOCKET);
+                    log.info("tesseractLog:{}", tesseractLog);
+                    //更新触发器状态为执行状态
+                    updateTriggerStatus(TRGGER_STATUS_STARTING);
                     tesseractLogService.save(tesseractLog);
                     return;
                 }
+                tesseractLog.setClassName(jobDetail.getClassName());
                 //获取执行器
                 QueryWrapper<TesseractExecutorTriggerLink> queryWrapper = new QueryWrapper<>();
                 queryWrapper.lambda().eq(TesseractExecutorTriggerLink::getTriggerId, trigger.getId());
@@ -87,7 +96,10 @@ public class TesseractTriggerDispatcher {
                     tesseractLog.setStatus(LOG_FAIL);
                     tesseractLog.setMsg("没有发现运行执行器");
                     tesseractLog.setSocket(NULL_SOCKET);
+                    //更新触发器状态为执行状态
+                    updateTriggerStatus(TRGGER_STATUS_STARTING);
                     tesseractLogService.save(tesseractLog);
+                    log.info("tesseractLog:{}", tesseractLog);
                     return;
                 }
                 //todo 广播
@@ -113,15 +125,26 @@ public class TesseractTriggerDispatcher {
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             }
+            //如果成功进入执行器队列
             if (response.getStatus() == TesseractExecutorResponse.SUCCESS_STATUS) {
+                //更新触发器状态为执行状态
+                updateTriggerStatus(TRGGER_STATUS_EXECUTING);
                 tesseractLog.setStatus(LOG_WAIT);
             } else {
                 tesseractLog.setStatus(LOG_FAIL);
             }
-            tesseractLog.setMsg(response.getMsg());
+            //更新触发器状态为开始状态
+            updateTriggerStatus(TRGGER_STATUS_STARTING);
+            tesseractLog.setMsg(response.getBody().toString());
             tesseractLogService.save(tesseractLog);
+            log.info("tesseractLog:{}", tesseractLog);
         }
 
+        private void updateTriggerStatus(Integer status) {
+            if (!isOnce) {
+                AdminUtils.updateTriggerStatus(triggerService, Arrays.asList(trigger), status);
+            }
+        }
 
     }
 

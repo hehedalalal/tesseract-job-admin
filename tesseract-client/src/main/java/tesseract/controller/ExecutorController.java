@@ -25,8 +25,7 @@ public class ExecutorController {
 
     @ExceptionHandler(Throwable.class)
     public TesseractExecutorResponse exceptionHandler(Throwable throwable) {
-        TesseractExecutorResponse fail = TesseractExecutorResponse.FAIL;
-        fail.setMsg(throwable.getMessage());
+        TesseractExecutorResponse fail = new TesseractExecutorResponse(TesseractExecutorResponse.FAIL_STAUTS, throwable.getMessage());
         return fail;
     }
 }

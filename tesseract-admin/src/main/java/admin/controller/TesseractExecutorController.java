@@ -4,6 +4,7 @@ package admin.controller;
 import admin.service.ITesseractExecutorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tesseract.core.dto.TesseractAdminRegistryRequest;
@@ -28,10 +29,9 @@ public class TesseractExecutorController {
     private ITesseractExecutorService tesseractExecutorService;
 
     @RequestMapping(REGISTRY_MAPPING_SUFFIX)
-    public TesseractExecutorResponse registry(@Validated TesseractAdminRegistryRequest tesseractAdminRegistryRequest) throws Exception {
+    public TesseractExecutorResponse registry(@Validated @RequestBody TesseractAdminRegistryRequest tesseractAdminRegistryRequest) throws Exception {
         TesseractAdminRegistryResDTO registry = tesseractExecutorService.registry(tesseractAdminRegistryRequest);
-        TesseractExecutorResponse success = TesseractExecutorResponse.SUCCESS;
-        success.setBody(registry);
+        TesseractExecutorResponse success = new TesseractExecutorResponse(TesseractExecutorResponse.SUCCESS_STATUS, registry);
         return success;
     }
 }

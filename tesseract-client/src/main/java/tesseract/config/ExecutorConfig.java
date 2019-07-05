@@ -19,8 +19,10 @@ import tesseract.postproccsor.TesseractBeanFactoryProcesser;
 public class ExecutorConfig {
     @Autowired
     private Decoder decoder;
+
     @Autowired
     private Encoder encoder;
+
 
     @Bean
     public ExecutorController executorController() {
@@ -39,7 +41,7 @@ public class ExecutorConfig {
     }
 
     @Bean
-    public TesseractBeanFactoryProcesser tesseractBeanFactoryProcesser() {
+    public static TesseractBeanFactoryProcesser tesseractBeanFactoryProcesser() {
         return new TesseractBeanFactoryProcesser();
     }
 }

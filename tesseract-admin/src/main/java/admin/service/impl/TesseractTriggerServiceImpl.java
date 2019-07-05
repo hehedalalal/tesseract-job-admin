@@ -5,19 +5,22 @@ import admin.entity.TesseractTrigger;
 import admin.mapper.TesseractTriggerMapper;
 import admin.service.ITesseractLockService;
 import admin.service.ITesseractTriggerService;
+import admin.util.AdminUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import tesseract.exception.TesseractException;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static admin.constant.AdminConstant.TRGGER_STATUS_START;
-import static admin.constant.AdminConstant.TRIGGER_LOCK_NAME;
+import static admin.constant.AdminConstant.*;
 
 /**
  * <p>
@@ -28,6 +31,7 @@ import static admin.constant.AdminConstant.TRIGGER_LOCK_NAME;
  * @since 2019-07-03
  */
 @Service
+@Slf4j
 public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMapper, TesseractTrigger> implements ITesseractTriggerService {
     @Autowired
     private ITesseractLockService lockService;
@@ -40,10 +44,15 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
         lockService.lock(TRIGGER_LOCK_NAME);
         QueryWrapper<TesseractTrigger> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().le(TesseractTrigger::getNextTriggerTime, time)
-                .eq(TesseractTrigger::getStatus, TRGGER_STATUS_START);
+                .eq(TesseractTrigger::getStatus, TRGGER_STATUS_STARTING);
         Page<TesseractTrigger> page = new Page<>(1, batchSize);
         IPage<TesseractTrigger> listPage = page(page, queryWrapper);
-        return listPage.getRecords();
+        List<TesseractTrigger> triggerList = listPage.getRecords();
+        if (!CollectionUtils.isEmpty(triggerList)) {
+            //更新触发器状态为获取状态
+            AdminUtils.updateTriggerStatus(this, triggerList, TRGGER_STATUS_ACCQUIRED);
+        }
+        return triggerList;
     }
 
     @Override
@@ -54,6 +63,11 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
 
     @Override
     public void executeTrigger(Integer triggerId) {
-        triggerDispatcher.dispatchTrigger(Arrays.asList(getById(triggerId)));
+        TesseractTrigger byId = getById(triggerId);
+        if (byId == null) {
+            log.error("找不到对应触发器:{}", triggerId);
+            throw new TesseractException("找不到对应触发器:" + triggerId);
+        }
+        triggerDispatcher.dispatchTrigger(Arrays.asList(byId), true);
     }
 }

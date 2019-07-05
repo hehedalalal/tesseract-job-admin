@@ -5,6 +5,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.util.StringUtils;
 import tesseract.core.annotation.ClientJobDetail;
 import tesseract.core.annotation.TesseractJob;
 import tesseract.core.handler.JobHandler;
@@ -23,11 +24,15 @@ public class TesseractBeanFactoryProcesser implements BeanFactoryPostProcessor {
         Arrays.asList(beanDefinitionNames).parallelStream().forEach(beanDefinitionName -> {
             BeanDefinition beanDefinition = beanFactory.getBeanDefinition(beanDefinitionName);
             String beanClassName = beanDefinition.getBeanClassName();
+            if (StringUtils.isEmpty(beanClassName)) {
+                return;
+            }
+
             try {
                 Class<?> aClass = Class.forName(beanClassName);
                 TesseractJob annotation;
                 if (aClass != null && (annotation = aClass.getAnnotation(TesseractJob.class)) != null) {
-                    if (!aClass.isAssignableFrom(JobHandler.class)) {
+                    if (!JobHandler.class.isAssignableFrom(aClass)) {
                         log.error("注解TesseractJob只能加在JobHandler实现类");
                         return;
                     }
@@ -40,6 +45,8 @@ public class TesseractBeanFactoryProcesser implements BeanFactoryPostProcessor {
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
+
+
         });
     }
 }

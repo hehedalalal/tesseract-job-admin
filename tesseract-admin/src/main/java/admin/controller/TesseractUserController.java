@@ -43,7 +43,7 @@ public class TesseractUserController {
         hashMap.put("avatar", "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif");
         hashMap.put("name", "Super Admin");
         hashMap.put("token", token);
-        return new CommonResponseVO(CommonResponseVO.SUCCESS_STATUS, null, hashMap);
+        return new CommonResponseVO(CommonResponseVO.SUCCESS_STATUS, hashMap);
     }
 
     @RequestMapping("/logout")
