@@ -34,6 +34,5 @@ public class TesseractExecutorController {
         success.setBody(registry);
         return success;
     }
-
 }
 

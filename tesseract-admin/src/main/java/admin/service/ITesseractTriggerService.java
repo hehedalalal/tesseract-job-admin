@@ -18,4 +18,6 @@ public interface ITesseractTriggerService extends IService<TesseractTrigger> {
     List<TesseractTrigger> findTriggerWithLock(int batchSize, long time);
 
     IPage<TesseractTrigger> listByPage(Integer currentPage, Integer pageSize);
+
+    void executeTrigger(Integer triggerId);
 }

@@ -27,11 +27,12 @@ import javax.validation.constraints.NotNull;
 @RequestMapping("/tesseract-trigger")
 public class TesseractTriggerController {
     @Autowired
-    private ITesseractTriggerService tesseractTriggerService;
+    private ITesseractTriggerService triggerService;
+
 
     @GetMapping("/trigger")
     public CommonResponseVO tesseractTriggerList(@NotNull @Min(1) Integer currentPage, @NotNull @Min(1) @Max(50) Integer pageSize) {
-        IPage<TesseractTrigger> tesseractTriggerIPage = tesseractTriggerService.listByPage(currentPage, pageSize);
+        IPage<TesseractTrigger> tesseractTriggerIPage = triggerService.listByPage(currentPage, pageSize);
         TriggerVO triggerVO = new TriggerVO();
         PageVO pageVO = new PageVO();
         pageVO.setCurrentPage(tesseractTriggerIPage.getCurrent());
@@ -46,7 +47,13 @@ public class TesseractTriggerController {
 
     @PostMapping("/addTrigger")
     public CommonResponseVO addTrigger(@Validated @RequestBody TesseractTrigger tesseractTrigger) {
-        tesseractTriggerService.save(tesseractTrigger);
+        triggerService.save(tesseractTrigger);
+        return CommonResponseVO.SUCCESS;
+    }
+
+    @RequestMapping("/execute")
+    public CommonResponseVO execute(@NotNull Integer triggerId) {
+        triggerService.executeTrigger(triggerId);
         return CommonResponseVO.SUCCESS;
     }
 

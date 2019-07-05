@@ -1,5 +1,6 @@
 package admin.service.impl;
 
+import admin.core.scheduler.TesseractTriggerDispatcher;
 import admin.entity.TesseractTrigger;
 import admin.mapper.TesseractTriggerMapper;
 import admin.service.ITesseractLockService;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static admin.constant.AdminConstant.TRGGER_STATUS_START;
@@ -29,6 +31,8 @@ import static admin.constant.AdminConstant.TRIGGER_LOCK_NAME;
 public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMapper, TesseractTrigger> implements ITesseractTriggerService {
     @Autowired
     private ITesseractLockService lockService;
+    @Autowired
+    private TesseractTriggerDispatcher triggerDispatcher;
 
     @Transactional
     @Override
@@ -46,5 +50,10 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
     public IPage<TesseractTrigger> listByPage(Integer currentPage, Integer pageSize) {
         Page<TesseractTrigger> page = new Page<>(currentPage, pageSize);
         return page(page);
+    }
+
+    @Override
+    public void executeTrigger(Integer triggerId) {
+        triggerDispatcher.dispatchTrigger(Arrays.asList(getById(triggerId)));
     }
 }

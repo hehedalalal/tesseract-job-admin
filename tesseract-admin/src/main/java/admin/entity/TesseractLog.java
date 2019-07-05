@@ -28,6 +28,8 @@ public class TesseractLog implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
+    private String className;
+
     private String triggerName;
 
     private String socket;
@@ -40,5 +42,5 @@ public class TesseractLog implements Serializable {
 
     private Long createTime;
 
-
+    private Long endTime;
 }
