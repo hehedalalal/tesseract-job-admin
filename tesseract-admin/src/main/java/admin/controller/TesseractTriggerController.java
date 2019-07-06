@@ -41,9 +41,7 @@ public class TesseractTriggerController {
         pageVO.setTotal(tesseractTriggerIPage.getTotal());
         triggerVO.setPageInfo(pageVO);
         triggerVO.setTriggerList(tesseractTriggerIPage.getRecords());
-        CommonResponseVO success = CommonResponseVO.SUCCESS;
-        success.setBody(triggerVO);
-        return success;
+        return CommonResponseVO.success(triggerVO);
     }
 
     @PostMapping("/addTrigger")

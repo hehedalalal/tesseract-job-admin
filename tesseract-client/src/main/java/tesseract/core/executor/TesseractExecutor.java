@@ -9,15 +9,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
 import tesseract.core.annotation.ClientJobDetail;
 import tesseract.core.context.ExecutorContext;
-import tesseract.core.dto.TesseractAdminJobDetailDTO;
-import tesseract.core.dto.TesseractAdminRegistryRequest;
-import tesseract.core.dto.TesseractExecutorRequest;
-import tesseract.core.dto.TesseractExecutorResponse;
+import tesseract.core.dto.*;
 import tesseract.core.handler.JobHandler;
 import tesseract.exception.TesseractException;
 import tesseract.feignService.IClientFeignService;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -25,7 +23,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static tesseract.core.constant.CommonConstant.REGISTRY_MAPPING;
+import static tesseract.core.constant.CommonConstant.*;
 
 
 @Slf4j
@@ -47,26 +45,47 @@ public class TesseractExecutor implements InitializingBean, DisposableBean {
     private final AtomicInteger ATOMIC_INTEGER = new AtomicInteger(0);
     private final ThreadPoolExecutor THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(10,
             100, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(800)
-            , r -> new Thread(String.format(THREAD_NAME_FORMATTER, ATOMIC_INTEGER.getAndIncrement())));
+            , r -> new Thread(r, String.format(THREAD_NAME_FORMATTER, ATOMIC_INTEGER.getAndIncrement())));
     /**
      * constant
      */
     private Thread registryThread;
 
+    /**
+     * 开始执行任务，扔到线程池后发送成功执行通知，执行完毕后发送异步执行成功通知
+     *
+     * @param tesseractExecutorRequest
+     * @return
+     */
     public TesseractExecutorResponse execute(TesseractExecutorRequest tesseractExecutorRequest) {
-        THREAD_POOL_EXECUTOR.execute(() -> {
+        THREAD_POOL_EXECUTOR.execute(() ->{
             String className = tesseractExecutorRequest.getClassName();
+            TesseractAdminJobNotify tesseractAdminJobNotify = new TesseractAdminJobNotify();
+            tesseractAdminJobNotify.setLogId(tesseractExecutorRequest.getLogId());
+            TesseractExecutorResponse notify = null;
             try {
                 Class<?> aClass = Class.forName(className);
                 JobHandler jobHandler = (JobHandler) aClass.newInstance();
                 ExecutorContext executorContext = new ExecutorContext();
                 executorContext.setShardingIndex(tesseractExecutorRequest.getShardingIndex());
                 jobHandler.execute(executorContext);
+                notify = clientFeignService.notify(new URI(getAdminServerAddress() + NOTIFY_MAPPING), tesseractAdminJobNotify);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("执行异常:{}", e.getMessage());
+                tesseractAdminJobNotify.setException(e.getMessage());
+                try {
+                    notify = clientFeignService.notify(new URI(getAdminServerAddress() + NOTIFY_MAPPING), tesseractAdminJobNotify);
+                } catch (URISyntaxException ex) {
+                    log.error("执行异常URI异常:{}", e.getMessage());
+                }
             }
+            log.info("执行通知结果:{}", notify);
         });
-        return TesseractExecutorResponse.SUCCESS;
+        return TesseractExecutorResponse.builder().status(TesseractExecutorResponse.SUCCESS_STATUS).body("成功进入队列").build();
+    }
+
+    private String getAdminServerAddress() {
+        return this.adminServerAddress;
     }
 
     /**
@@ -85,6 +104,9 @@ public class TesseractExecutor implements InitializingBean, DisposableBean {
         registryThread.interrupt();
     }
 
+    /**
+     * 注册任务
+     */
     private class RegistryRunnable implements Runnable {
         private volatile boolean isRegistry = false;
         private volatile boolean isStop = false;

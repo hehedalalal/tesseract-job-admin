@@ -12,6 +12,7 @@ public class AdminConstant {
      * 相关
      */
     public static final String NULL_SOCKET = "";
+    public static final Integer LOG_INIT = 3;
     public static final Integer LOG_WAIT = 2;
     public static final Integer LOG_SUCCESS = 1;
     public static final Integer LOG_FAIL = 0;

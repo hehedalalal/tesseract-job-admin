@@ -10,4 +10,7 @@ public class TesseractExecutorRequest {
     private String className;
     @NotNull
     private Integer shardingIndex;
+
+    @NotNull
+    private Long logId;
 }

@@ -71,3 +71,8 @@ create table tesseract_log(
 	create_time bigint not null,
 	end_time bigint not null
 ) engine=InnoDB default charset=utf8;
+
+insert into tesseract_user(name,password,create_time,update_time) values('admin','21232F297A57A5A743894A0E4A801FC3',1562336661000,1562336661000);
+insert into tesseract_trigger(name,next_trigger_time,prev_trigger_time,cron,strategy,sharding_num,retry_count
+                             ,status,creator,description,create_time,update_time)
+                             values('testTrigger',0,0,'* * * * * ?',0,0,0,0,'admin','test',1562336661000,1562336661000);

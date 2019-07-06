@@ -110,7 +110,7 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
         queryWrapper.lambda().eq(TesseractExecutorTriggerLink::getTriggerId, triggerId).eq(TesseractExecutorTriggerLink::getExecutorId, executorId);
         TesseractExecutorTriggerLink tesseractExecutorTriggerLink = triggerLinkService.getOne(queryWrapper);
         if (tesseractExecutorTriggerLink != null) {
-            log.error("执行器触发器关联{}已存在，将忽略注册", tesseractExecutorTriggerLink);
+            log.warn("执行器触发器关联{}已存在，将忽略注册", tesseractExecutorTriggerLink);
             return;
         }
         tesseractExecutorTriggerLink = new TesseractExecutorTriggerLink();
@@ -129,7 +129,7 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
         queryWrapper.lambda().eq(TesseractExecutor::getSocket, socket);
         TesseractExecutor executor = getOne(queryWrapper);
         if (executor != null) {
-            log.error("执行器{}已存在，将忽略注册", executor);
+            log.warn("执行器{}已存在，将忽略注册", executor);
             return executor;
         }
         executor = new TesseractExecutor();

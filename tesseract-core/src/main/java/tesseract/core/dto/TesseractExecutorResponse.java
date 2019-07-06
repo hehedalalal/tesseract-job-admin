@@ -1,12 +1,14 @@
 package tesseract.core.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class TesseractExecutorResponse {
     public static final int SUCCESS_STATUS = 200;
     public static final String SUCCESS_MSG = "SUCCESS";

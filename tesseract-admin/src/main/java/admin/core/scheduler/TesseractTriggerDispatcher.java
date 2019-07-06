@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static admin.constant.AdminConstant.*;
 import static tesseract.core.constant.CommonConstant.EXECUTE_MAPPING;
+import static tesseract.core.constant.CommonConstant.HTTP_PREFIX;
 
 @Slf4j
 public class TesseractTriggerDispatcher {
@@ -44,7 +45,7 @@ public class TesseractTriggerDispatcher {
     private final AtomicInteger ATOMIC_INTEGER = new AtomicInteger(0);
     private final ThreadPoolExecutor THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(10,
             30, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(500)
-            , r -> new Thread(String.format(THREAD_NAME_FORMATTER, ATOMIC_INTEGER.getAndIncrement())), (r, executor) -> {
+            , r -> new Thread(r, String.format(THREAD_NAME_FORMATTER, ATOMIC_INTEGER.getAndIncrement())), (r, executor) -> {
         log.error("调度线程阻塞，检查网络设置");
         r.run();
     });
@@ -52,7 +53,7 @@ public class TesseractTriggerDispatcher {
     public void dispatchTrigger(List<TesseractTrigger> triggerList, boolean isOnce) {
         triggerList.stream().forEach(trigger -> {
             //THREAD_POOL_EXECUTOR.execute(new TaskRunnable(trigger, isOnce));
-            new TaskRunnable(trigger, isOnce).run();
+            THREAD_POOL_EXECUTOR.execute(new TaskRunnable(trigger, isOnce));
         });
     }
 
@@ -81,6 +82,7 @@ public class TesseractTriggerDispatcher {
                     tesseractLog.setStatus(LOG_FAIL);
                     tesseractLog.setMsg("没有发现可运行job");
                     tesseractLog.setSocket(NULL_SOCKET);
+                    tesseractLog.setEndTime(System.currentTimeMillis());
                     log.info("tesseractLog:{}", tesseractLog);
                     //更新触发器状态为执行状态
                     updateTriggerStatus(TRGGER_STATUS_STARTING);
@@ -96,6 +98,7 @@ public class TesseractTriggerDispatcher {
                     tesseractLog.setStatus(LOG_FAIL);
                     tesseractLog.setMsg("没有发现运行执行器");
                     tesseractLog.setSocket(NULL_SOCKET);
+                    tesseractLog.setEndTime(System.currentTimeMillis());
                     //更新触发器状态为执行状态
                     updateTriggerStatus(TRGGER_STATUS_STARTING);
                     tesseractLogService.save(tesseractLog);
@@ -110,33 +113,50 @@ public class TesseractTriggerDispatcher {
             }
         }
 
+        /**
+         * 根据路由策略，选择机器执行
+         *
+         * @param tesseractLog
+         * @param executorTriggerLinkList
+         * @param jobDetail
+         */
         private void routerExecute(TesseractLog tesseractLog, List<TesseractExecutorTriggerLink> executorTriggerLinkList, TesseractJobDetail jobDetail) {
             TesseractExecutorTriggerLink executorTriggerLink = SCHEDULE_ROUTER_MAP.getOrDefault(trigger.getStrategy(), new HashRouter()).routerExecutor(executorTriggerLinkList);
             TesseractExecutor tesseractExecutor = executorService.getById(executorTriggerLink.getExecutorId());
+            //首先保存日志，获取到日志id，便于异步更新
             tesseractLog.setSocket(tesseractExecutor.getSocket());
+            tesseractLog.setStatus(LOG_INIT);
+            tesseractLog.setMsg("等待执行器执行");
+            tesseractLogService.save(tesseractLog);
             //构建请求
             TesseractExecutorRequest executorRequest = new TesseractExecutorRequest();
             executorRequest.setClassName(jobDetail.getClassName());
             executorRequest.setShardingIndex(trigger.getShardingNum());
+            executorRequest.setLogId(tesseractLog.getId());
             //发送调度请求
-            TesseractExecutorResponse response = null;
+            TesseractExecutorResponse response;
             try {
-                response = feignService.sendToExecutor(new URI(tesseractExecutor.getSocket() + EXECUTE_MAPPING), executorRequest);
+                response = feignService.sendToExecutor(new URI(HTTP_PREFIX + tesseractExecutor.getSocket() + EXECUTE_MAPPING), executorRequest);
             } catch (URISyntaxException e) {
-                e.printStackTrace();
+                log.error("URI异常:{}", e.getMessage());
+                response = TesseractExecutorResponse.builder().body("URI异常").status(TesseractExecutorResponse.FAIL_STAUTS).build();
             }
             //如果成功进入执行器队列
             if (response.getStatus() == TesseractExecutorResponse.SUCCESS_STATUS) {
-                //更新触发器状态为执行状态
+                //更新触发器状态为执行状态 todo 应该更改为fired_trigger表
                 updateTriggerStatus(TRGGER_STATUS_EXECUTING);
-                tesseractLog.setStatus(LOG_WAIT);
+                return;
             } else {
                 tesseractLog.setStatus(LOG_FAIL);
             }
             //更新触发器状态为开始状态
             updateTriggerStatus(TRGGER_STATUS_STARTING);
-            tesseractLog.setMsg(response.getBody().toString());
-            tesseractLogService.save(tesseractLog);
+            tesseractLog.setEndTime(System.currentTimeMillis());
+            Object body = response.getBody();
+            if (body != null) {
+                tesseractLog.setMsg(body.toString());
+            }
+            tesseractLogService.updateById(tesseractLog);
             log.info("tesseractLog:{}", tesseractLog);
         }
 
