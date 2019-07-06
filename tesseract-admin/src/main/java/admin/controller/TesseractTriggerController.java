@@ -45,8 +45,8 @@ public class TesseractTriggerController {
     }
 
     @PostMapping("/addTrigger")
-    public CommonResponseVO addTrigger(@Validated @RequestBody TesseractTrigger tesseractTrigger) {
-        triggerService.save(tesseractTrigger);
+    public CommonResponseVO addTrigger(@Validated @RequestBody TesseractTrigger tesseractTrigger) throws Exception {
+        triggerService.saveTrigger(tesseractTrigger);
         return CommonResponseVO.SUCCESS;
     }
 

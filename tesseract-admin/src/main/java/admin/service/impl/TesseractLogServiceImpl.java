@@ -2,6 +2,7 @@ package admin.service.impl;
 
 import admin.entity.TesseractLog;
 import admin.mapper.TesseractLogMapper;
+import admin.service.ITesseractFiredTriggerService;
 import admin.service.ITesseractLogService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -29,11 +30,15 @@ import static admin.constant.AdminConstant.LOG_SUCCESS;
 @Slf4j
 @Service
 public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, TesseractLog> implements ITesseractLogService {
+    @Autowired
+    private ITesseractFiredTriggerService firedTriggerService;
+
     @Transactional
     @Override
     public void notify(TesseractAdminJobNotify tesseractAdminJobNotify) {
         Long logId = tesseractAdminJobNotify.getLogId();
         String exception = tesseractAdminJobNotify.getException();
+        Integer triggerId = tesseractAdminJobNotify.getTriggerId();
         TesseractLog tesseractLog = this.getById(logId);
         if (tesseractLog == null) {
             log.error("获取日志为空:{}", tesseractAdminJobNotify);
@@ -46,6 +51,6 @@ public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, Tes
             tesseractLog.setStatus(LOG_SUCCESS);
             tesseractLog.setMsg("执行成功");
         }
-        this.updateById(tesseractLog);
+        firedTriggerService.removeFiredTriggerAndUpdateLog(triggerId, tesseractLog);
     }
 }

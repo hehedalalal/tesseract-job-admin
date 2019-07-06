@@ -13,4 +13,7 @@ public class TesseractExecutorRequest {
 
     @NotNull
     private Long logId;
+
+    @NotNull
+    private Integer triggerId;
 }

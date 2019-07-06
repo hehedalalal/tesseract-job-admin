@@ -34,9 +34,9 @@ public class TesseractTrigger implements Serializable {
     @NotBlank
     private String name;
 
-    private Long nextTriggerTime = 0L;
+    private Long nextTriggerTime;
 
-    private Long prevTriggerTime = 0L;
+    private Long prevTriggerTime;
 
     @NotBlank
     private String cron;
@@ -49,13 +49,13 @@ public class TesseractTrigger implements Serializable {
     @NotBlank
     private String description;
 
-    private Integer status = TRGGER_STATUS_STOPING;
+    private Integer status;
 
     private String creator = "admin";
 
-    private Long createTime = System.currentTimeMillis();
+    private Long createTime;
 
-    private Long updateTime = System.currentTimeMillis();
+    private Long updateTime;
 
 
 }

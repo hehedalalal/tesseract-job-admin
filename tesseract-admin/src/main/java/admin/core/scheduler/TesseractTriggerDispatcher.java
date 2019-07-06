@@ -38,6 +38,8 @@ public class TesseractTriggerDispatcher {
     @Autowired
     private ITesseractTriggerService triggerService;
     @Autowired
+    private ITesseractFiredTriggerService firedTriggerService;
+    @Autowired
     private IAdminFeignService feignService;
 
 
@@ -51,8 +53,10 @@ public class TesseractTriggerDispatcher {
     });
 
     public void dispatchTrigger(List<TesseractTrigger> triggerList, boolean isOnce) {
-        triggerList.stream().forEach(trigger -> {
-            //THREAD_POOL_EXECUTOR.execute(new TaskRunnable(trigger, isOnce));
+        triggerList.parallelStream().forEach(trigger -> {
+            //更新触发器下一次执行时间
+            trigger.setPrevTriggerTime(System.currentTimeMillis());
+            triggerService.updateTriggerStatusAndCalculate(Arrays.asList(trigger), TRGGER_STATUS_STARTING);
             THREAD_POOL_EXECUTOR.execute(new TaskRunnable(trigger, isOnce));
         });
     }
@@ -69,6 +73,13 @@ public class TesseractTriggerDispatcher {
         @Override
         public void run() {
             try {
+                //将触发器加入fired_trigger
+                TesseractFiredTrigger tesseractFiredTrigger = new TesseractFiredTrigger();
+                tesseractFiredTrigger.setCreateTime(System.currentTimeMillis());
+                tesseractFiredTrigger.setName(trigger.getName());
+                tesseractFiredTrigger.setTriggerId(trigger.getId());
+                firedTriggerService.save(tesseractFiredTrigger);
+                //构建日志
                 TesseractLog tesseractLog = new TesseractLog();
                 tesseractLog.setClassName("");
                 tesseractLog.setCreateTime(System.currentTimeMillis());
@@ -84,8 +95,6 @@ public class TesseractTriggerDispatcher {
                     tesseractLog.setSocket(NULL_SOCKET);
                     tesseractLog.setEndTime(System.currentTimeMillis());
                     log.info("tesseractLog:{}", tesseractLog);
-                    //更新触发器状态为执行状态
-                    updateTriggerStatus(TRGGER_STATUS_STARTING);
                     tesseractLogService.save(tesseractLog);
                     return;
                 }
@@ -99,8 +108,6 @@ public class TesseractTriggerDispatcher {
                     tesseractLog.setMsg("没有发现运行执行器");
                     tesseractLog.setSocket(NULL_SOCKET);
                     tesseractLog.setEndTime(System.currentTimeMillis());
-                    //更新触发器状态为执行状态
-                    updateTriggerStatus(TRGGER_STATUS_STARTING);
                     tesseractLogService.save(tesseractLog);
                     log.info("tesseractLog:{}", tesseractLog);
                     return;
@@ -133,6 +140,7 @@ public class TesseractTriggerDispatcher {
             executorRequest.setClassName(jobDetail.getClassName());
             executorRequest.setShardingIndex(trigger.getShardingNum());
             executorRequest.setLogId(tesseractLog.getId());
+            executorRequest.setTriggerId(trigger.getId());
             //发送调度请求
             TesseractExecutorResponse response;
             try {
@@ -141,29 +149,20 @@ public class TesseractTriggerDispatcher {
                 log.error("URI异常:{}", e.getMessage());
                 response = TesseractExecutorResponse.builder().body("URI异常").status(TesseractExecutorResponse.FAIL_STAUTS).build();
             }
-            //如果成功进入执行器队列
-            if (response.getStatus() == TesseractExecutorResponse.SUCCESS_STATUS) {
-                //更新触发器状态为执行状态 todo 应该更改为fired_trigger表
-                updateTriggerStatus(TRGGER_STATUS_EXECUTING);
-                return;
-            } else {
+            //如果执行失败则更新日志状态并且移出执行表，如果執行成功则异步由执行器修改状态和移出執行表
+            if (response.getStatus() != TesseractExecutorResponse.SUCCESS_STATUS) {
                 tesseractLog.setStatus(LOG_FAIL);
+            } else {
+                return;
             }
-            //更新触发器状态为开始状态
-            updateTriggerStatus(TRGGER_STATUS_STARTING);
             tesseractLog.setEndTime(System.currentTimeMillis());
             Object body = response.getBody();
             if (body != null) {
                 tesseractLog.setMsg(body.toString());
             }
-            tesseractLogService.updateById(tesseractLog);
+            //移出执行表并修改日志状态
+            firedTriggerService.removeFiredTriggerAndUpdateLog(trigger.getId(), tesseractLog);
             log.info("tesseractLog:{}", tesseractLog);
-        }
-
-        private void updateTriggerStatus(Integer status) {
-            if (!isOnce) {
-                AdminUtils.updateTriggerStatus(triggerService, Arrays.asList(trigger), status);
-            }
         }
 
     }

@@ -19,7 +19,9 @@ public class TesseractScheduler implements InitializingBean {
 
 
     private int maxBatchSize = 50;
+    private int timeWindowSize = 10;
     private int sleepTime = 20;
+
     private Thread schedulerThread;
 
 
@@ -40,9 +42,23 @@ public class TesseractScheduler implements InitializingBean {
         @Override
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
-                List<TesseractTrigger> triggerList = tesseractTriggerService.findTriggerWithLock(maxBatchSize, System.currentTimeMillis());
+                List<TesseractTrigger> triggerList = tesseractTriggerService.findTriggerWithLock(maxBatchSize, System.currentTimeMillis(), timeWindowSize);
                 log.info("schedulerThread扫描到触发器：{}", triggerList);
                 if (!CollectionUtils.isEmpty(triggerList)) {
+                    //降序排序等待时间差
+                    TesseractTrigger tesseractTrigger = triggerList.get(0);
+                    Long nextTriggerTime = tesseractTrigger.getNextTriggerTime();
+                    long time = System.currentTimeMillis() - nextTriggerTime;
+                    //5s时间差
+                    if (time > 5) {
+                        synchronized (this) {
+                            try {
+                                this.wait(time - 5);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
                     tesseractTriggerDispatcher.dispatchTrigger(triggerList, false);
                     continue;
                 }

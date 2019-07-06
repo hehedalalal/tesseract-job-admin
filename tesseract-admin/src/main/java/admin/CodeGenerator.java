@@ -31,11 +31,11 @@ public class CodeGenerator {
 
         // 数据源配置
         DataSourceConfig dsc = new DataSourceConfig();
-        dsc.setUrl("jdbc:mysql://localhost:3306/tesseract?useUnicode=true&useSSL=false&characterEncoding=utf8");
+        dsc.setUrl("jdbc:mysql://localhost:3306/tesseract?useUnicode=true&useSSL=false&characterEncoding=utf8&serverTimezone=UTC");
         // dsc.setSchemaName("public");
         dsc.setDriverName("com.mysql.jdbc.Driver");
         dsc.setUsername("root");
-        dsc.setPassword("HJ.1995.11.6");
+        dsc.setPassword("root");
         mpg.setDataSource(dsc);
 
         // 包配置
@@ -113,7 +113,7 @@ public class CodeGenerator {
 //                "tesseract_user"
 //        );
         strategy.setInclude(
-                "tesseract_log"
+                "tesseract_fired_trigger"
         );
 
         strategy.setControllerMappingHyphenStyle(true);

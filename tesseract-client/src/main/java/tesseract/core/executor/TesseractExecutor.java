@@ -58,10 +58,11 @@ public class TesseractExecutor implements InitializingBean, DisposableBean {
      * @return
      */
     public TesseractExecutorResponse execute(TesseractExecutorRequest tesseractExecutorRequest) {
-        THREAD_POOL_EXECUTOR.execute(() ->{
+        THREAD_POOL_EXECUTOR.execute(() -> {
             String className = tesseractExecutorRequest.getClassName();
             TesseractAdminJobNotify tesseractAdminJobNotify = new TesseractAdminJobNotify();
             tesseractAdminJobNotify.setLogId(tesseractExecutorRequest.getLogId());
+            tesseractAdminJobNotify.setTriggerId(tesseractExecutorRequest.getTriggerId());
             TesseractExecutorResponse notify = null;
             try {
                 Class<?> aClass = Class.forName(className);

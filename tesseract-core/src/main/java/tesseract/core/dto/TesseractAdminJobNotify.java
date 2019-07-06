@@ -15,6 +15,8 @@ import javax.validation.constraints.NotNull;
 public class TesseractAdminJobNotify {
     @NotNull
     private Long logId;
+    @NotNull
+    private Integer triggerId;
     private String exception;
 //    private String log;
 }
