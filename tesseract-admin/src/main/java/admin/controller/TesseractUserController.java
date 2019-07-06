@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -70,6 +71,24 @@ public class TesseractUserController {
         userVO.setPageInfo(pageVO);
         userVO.setUserList(userIPage.getRecords());
         return CommonResponseVO.success(userVO);
+    }
+
+    @RequestMapping("/addUser")
+    public CommonResponseVO addUser(@Validated @RequestBody TesseractUser tesseractUser) throws Exception {
+        tesseractUserService.saveUser(tesseractUser);
+        return CommonResponseVO.SUCCESS;
+    }
+
+    @RequestMapping("/validUser")
+    public CommonResponseVO validUser(@NotNull String userId) throws Exception {
+        tesseractUserService.validUser(userId);
+        return CommonResponseVO.SUCCESS;
+    }
+
+    @RequestMapping("/invalidUser")
+    public CommonResponseVO invalidUser(@NotNull String userId) throws Exception {
+        tesseractUserService.invalidUser(userId);
+        return CommonResponseVO.SUCCESS;
     }
 }
 

@@ -9,7 +9,12 @@ import java.util.Map;
 
 public class AdminConstant {
     /**
-     * 相关
+     * 用户相关
+     */
+    public static final Integer USER_VALID = 1;
+    public static final Integer USER_INVALID = 0;
+    /**
+     * 日志相关
      */
     public static final String NULL_SOCKET = "";
     public static final Integer LOG_INIT = 3;

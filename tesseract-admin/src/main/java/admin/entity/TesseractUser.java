@@ -32,9 +32,9 @@ public class TesseractUser implements Serializable {
 
     private String password;
 
-    private Long createTime;
+    private Integer status;
 
-    private String token;
+    private Long createTime;
 
     private Long updateTime;
 

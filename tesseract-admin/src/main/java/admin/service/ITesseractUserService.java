@@ -22,4 +22,10 @@ public interface ITesseractUserService extends IService<TesseractUser> {
     void userLogout(String token);
 
     IPage<TesseractUser> listByPage(Integer currentPage, Integer pageSize, TesseractUser condition);
+
+    void saveUser(TesseractUser tesseractUser);
+
+    void validUser(String userId);
+
+    void invalidUser(String userId);
 }
