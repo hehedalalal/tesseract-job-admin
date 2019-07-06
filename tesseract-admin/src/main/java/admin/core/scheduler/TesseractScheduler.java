@@ -3,14 +3,18 @@ package admin.core.scheduler;
 import admin.entity.TesseractTrigger;
 import admin.service.ITesseractTriggerService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
 @Slf4j
-public class TesseractScheduler implements InitializingBean {
+public class TesseractScheduler implements InitializingBean, DisposableBean {
     @Autowired
     private ITesseractTriggerService tesseractTriggerService;
 
@@ -23,10 +27,18 @@ public class TesseractScheduler implements InitializingBean {
     private int sleepTime = 20;
 
     private Thread schedulerThread;
-
+    private volatile boolean isStop = false;
+    private volatile boolean isPause = true;
 
     public void destroy() {
+        isStop = true;
         schedulerThread.interrupt();
+    }
+
+    @EventListener(ContextRefreshedEvent.class)
+    public void start() {
+        isPause = false;
+        log.info("调度器启动");
     }
 
     @Override
@@ -41,7 +53,14 @@ public class TesseractScheduler implements InitializingBean {
 
         @Override
         public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!isStop) {
+                while (!isStop && isPause) {
+                    try {
+                        //响应中断
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                    }
+                }
                 List<TesseractTrigger> triggerList = tesseractTriggerService.findTriggerWithLock(maxBatchSize, System.currentTimeMillis(), timeWindowSize);
                 log.info("schedulerThread扫描到触发器：{}", triggerList);
                 if (!CollectionUtils.isEmpty(triggerList)) {

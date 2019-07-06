@@ -2,6 +2,7 @@ package admin.config;
 
 import admin.core.scheduler.TesseractScheduler;
 import admin.core.scheduler.TesseractTriggerDispatcher;
+import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import feign.Feign;
 import feign.Target;
 import feign.codec.Decoder;
@@ -23,16 +24,31 @@ public class AdminConfig {
     @Autowired
     private Encoder encoder;
 
-    @Bean(destroyMethod = "destroy")
+    /**
+     * 配置调度器
+     *
+     * @return
+     */
+    @Bean
     public TesseractScheduler tesseractScheduler() {
         return new TesseractScheduler();
     }
 
-    @Bean(destroyMethod = "destroy")
+    /**
+     * 配置调度分派器
+     *
+     * @return
+     */
+    @Bean
     public TesseractTriggerDispatcher tesseractTriggerDispatcher() {
         return new TesseractTriggerDispatcher();
     }
 
+    /**
+     * 配置feign服务
+     *
+     * @return
+     */
     @Bean
     public IAdminFeignService iAdminFeignService() {
         IAdminFeignService iAdminFeignService = Feign.builder().encoder(encoder).decoder(decoder)
@@ -40,4 +56,11 @@ public class AdminConfig {
         return iAdminFeignService;
     }
 
+    /**
+     * 分页插件
+     */
+    @Bean
+    public PaginationInterceptor paginationInterceptor() {
+        return new PaginationInterceptor();
+    }
 }

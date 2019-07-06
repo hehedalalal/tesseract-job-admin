@@ -63,6 +63,7 @@ public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, Tes
     public IPage<TesseractLog> listByPage(Integer currentPage, Integer pageSize, TesseractLog condition) {
         Page<TesseractLog> page = new Page<>(currentPage, pageSize);
         QueryWrapper<TesseractLog> queryWrapper = new QueryWrapper<>();
+        queryWrapper.lambda().orderByDesc(TesseractLog::getCreateTime);
         LambdaQueryWrapper<TesseractLog> lambda = queryWrapper.lambda();
         return page(page, queryWrapper);
     }

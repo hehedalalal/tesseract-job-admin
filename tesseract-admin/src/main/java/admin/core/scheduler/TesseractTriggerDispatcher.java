@@ -7,6 +7,7 @@ import admin.util.AdminUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import feignService.IAdminFeignService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import tesseract.core.dto.TesseractExecutorRequest;
@@ -26,7 +27,7 @@ import static tesseract.core.constant.CommonConstant.EXECUTE_MAPPING;
 import static tesseract.core.constant.CommonConstant.HTTP_PREFIX;
 
 @Slf4j
-public class TesseractTriggerDispatcher {
+public class TesseractTriggerDispatcher implements DisposableBean {
     @Autowired
     private ITesseractJobDetailService tesseractJobDetailService;
     @Autowired
@@ -169,5 +170,10 @@ public class TesseractTriggerDispatcher {
 
     public void destroy() {
         THREAD_POOL_EXECUTOR.shutdown();
+        try {
+            THREAD_POOL_EXECUTOR.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
