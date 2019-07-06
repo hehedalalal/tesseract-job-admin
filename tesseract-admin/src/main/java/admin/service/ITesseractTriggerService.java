@@ -17,9 +17,13 @@ import java.util.List;
 public interface ITesseractTriggerService extends IService<TesseractTrigger> {
     List<TesseractTrigger> findTriggerWithLock(int batchSize, long time, Integer timeWindowSize);
 
-    IPage<TesseractTrigger> listByPage(Integer currentPage, Integer pageSize);
+    IPage<TesseractTrigger> listByPage(Integer currentPage, Integer pageSize, TesseractTrigger condition);
 
     void executeTrigger(Integer triggerId);
+
+    void startTrigger(Integer triggerId);
+
+    void stopTrigger(Integer triggerId);
 
     void updateTriggerStatus(List<TesseractTrigger> triggerList, Integer status);
 
@@ -28,4 +32,6 @@ public interface ITesseractTriggerService extends IService<TesseractTrigger> {
     void updateTriggerStatusAndDeleteFiredTrigger(List<TesseractTrigger> triggerList, Integer status);
 
     void saveTrigger(TesseractTrigger tesseractTrigger) throws Exception;
+
+
 }

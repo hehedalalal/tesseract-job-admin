@@ -9,6 +9,7 @@ import admin.service.ITesseractFiredTriggerService;
 import admin.service.ITesseractLockService;
 import admin.service.ITesseractTriggerService;
 import admin.util.AdminUtils;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -51,7 +52,7 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
     public List<TesseractTrigger> findTriggerWithLock(int batchSize, long time, Integer timeWindowSize) {
         lockService.lock(TRIGGER_LOCK_NAME);
         QueryWrapper<TesseractTrigger> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().le(TesseractTrigger::getNextTriggerTime, time+timeWindowSize)
+        queryWrapper.lambda().le(TesseractTrigger::getNextTriggerTime, time + timeWindowSize)
                 .eq(TesseractTrigger::getStatus, TRGGER_STATUS_STARTING).orderByDesc(TesseractTrigger::getNextTriggerTime);
         Page<TesseractTrigger> page = new Page<>(1, batchSize);
         IPage<TesseractTrigger> listPage = page(page, queryWrapper);
@@ -118,19 +119,39 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
 
     @Transactional
     @Override
-    public IPage<TesseractTrigger> listByPage(Integer currentPage, Integer pageSize) {
+    public IPage<TesseractTrigger> listByPage(Integer currentPage, Integer pageSize, TesseractTrigger condition) {
         Page<TesseractTrigger> page = new Page<>(currentPage, pageSize);
-        return page(page);
+        QueryWrapper<TesseractTrigger> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<TesseractTrigger> lambda = queryWrapper.lambda();
+        return page(page, queryWrapper);
     }
 
     @Transactional
     @Override
     public void executeTrigger(Integer triggerId) {
-        TesseractTrigger byId = getById(triggerId);
-        if (byId == null) {
+        triggerDispatcher.dispatchTrigger(Arrays.asList(getTriggerById(triggerId)), true);
+    }
+
+    @Override
+    public void startTrigger(Integer triggerId) {
+        TesseractTrigger trigger = getTriggerById(triggerId);
+        trigger.setStatus(TRGGER_STATUS_STARTING);
+        updateById(trigger);
+    }
+
+    @Override
+    public void stopTrigger(Integer triggerId) {
+        TesseractTrigger trigger = getTriggerById(triggerId);
+        trigger.setStatus(TRGGER_STATUS_STOPING);
+        updateById(trigger);
+    }
+
+    private TesseractTrigger getTriggerById(Integer triggerId) {
+        TesseractTrigger trigger = getById(triggerId);
+        if (trigger == null) {
             log.error("找不到对应触发器:{}", triggerId);
             throw new TesseractException("找不到对应触发器:" + triggerId);
         }
-        triggerDispatcher.dispatchTrigger(Arrays.asList(byId), true);
+        return trigger;
     }
 }

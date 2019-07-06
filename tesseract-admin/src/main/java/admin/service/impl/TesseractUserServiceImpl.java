@@ -1,10 +1,14 @@
 package admin.service.impl;
 
+import admin.entity.TesseractTrigger;
 import admin.entity.TesseractUser;
 import admin.mapper.TesseractUserMapper;
 import admin.pojo.UserDO;
 import admin.service.ITesseractUserService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
@@ -55,6 +59,14 @@ public class TesseractUserServiceImpl extends ServiceImpl<TesseractUserMapper, T
         user.setUpdateTime(System.currentTimeMillis());
         user.setToken("");
         updateById(user);
+    }
+
+    @Override
+    public IPage<TesseractUser> listByPage(Integer currentPage, Integer pageSize, TesseractUser condition) {
+        Page<TesseractUser> page = new Page<>(currentPage, pageSize);
+        QueryWrapper<TesseractUser> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<TesseractUser> lambda = queryWrapper.lambda();
+        return page(page, queryWrapper);
     }
 
     public String generateToken(TesseractUser user) {

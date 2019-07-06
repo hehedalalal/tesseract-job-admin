@@ -1,9 +1,14 @@
 package admin.service.impl;
 
 import admin.entity.TesseractLog;
+import admin.entity.TesseractUser;
 import admin.mapper.TesseractLogMapper;
 import admin.service.ITesseractFiredTriggerService;
 import admin.service.ITesseractLogService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,5 +57,13 @@ public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, Tes
             tesseractLog.setMsg("执行成功");
         }
         firedTriggerService.removeFiredTriggerAndUpdateLog(triggerId, tesseractLog);
+    }
+
+    @Override
+    public IPage<TesseractLog> listByPage(Integer currentPage, Integer pageSize, TesseractLog condition) {
+        Page<TesseractLog> page = new Page<>(currentPage, pageSize);
+        QueryWrapper<TesseractLog> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<TesseractLog> lambda = queryWrapper.lambda();
+        return page(page, queryWrapper);
     }
 }
