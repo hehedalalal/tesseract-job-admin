@@ -58,4 +58,10 @@ public class TesseractLogController {
         logVO.setLogList(logIPage.getRecords());
         return CommonResponseVO.success(logVO);
     }
+
+    @RequestMapping("/getLogCount")
+    private CommonResponseVO getLogCount() {
+        return CommonResponseVO.success(logService.count());
+    }
+
 }

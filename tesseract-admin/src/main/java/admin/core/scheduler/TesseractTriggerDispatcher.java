@@ -76,6 +76,7 @@ public class TesseractTriggerDispatcher implements DisposableBean {
                 tesseractLog.setEndTime(0L);
                 //获取job detail
                 QueryWrapper<TesseractJobDetail> jobQueryWrapper = new QueryWrapper<>();
+                jobQueryWrapper.lambda().eq(TesseractJobDetail::getTriggerId, trigger.getId());
                 TesseractJobDetail jobDetail = tesseractJobDetailService.getOne(jobQueryWrapper);
                 if (jobDetail == null) {
                     tesseractLog.setStatus(LOG_FAIL);
@@ -128,8 +129,8 @@ public class TesseractTriggerDispatcher implements DisposableBean {
             TesseractExecutorDetail executorDetail = SCHEDULE_ROUTER_MAP.getOrDefault(trigger.getStrategy(), new HashRouter()).routerExecutor(executorDetailList);
             //首先保存日志，获取到日志id，便于异步更新
             tesseractLog.setSocket(executorDetail.getSocket());
+            tesseractLog.setMsg("等待执行");
             tesseractLog.setStatus(LOG_INIT);
-            tesseractLog.setMsg("等待执行器执行");
             tesseractLogService.save(tesseractLog);
             //将触发器加入fired_trigger
             TesseractFiredTrigger tesseractFiredTrigger = new TesseractFiredTrigger();

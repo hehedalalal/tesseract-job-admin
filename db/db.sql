@@ -132,16 +132,24 @@ insert into tesseract_trigger( name, next_trigger_time, prev_trigger_time, cron,
 values ('testTrigger', 1562336661000, 0, '*/5 * * * * ?', 0, 0, 0, 1, 'admin', 'test', 1, 1562336661000, 1562336661000);
 
 
+
+truncate table tesseract_job_detail;
+truncate table tesseract_log;
+truncate table tesseract_trigger;
+truncate table tesseract_fired_trigger;
+drop procedure insert_trigger;
 DELIMITER //
 CREATE PROCEDURE insert_trigger(IN loop_times INT)
 BEGIN
     DECLARE var INT DEFAULT 1;
     WHILE var <= loop_times DO
-    insert into tesseract_trigger( id, name, next_trigger_time, prev_trigger_time, cron, strategy, sharding_num
-                                 , retry_count
-                                 , status, creator, description, executor_id, create_time, update_time)
-    values (var, concat('testTrigger-', var), 1562336661000, 0, '*/5 * * * * ?', 0, 0, 0, 1, 'admin', 'test', 1,
+    insert into tesseract_trigger(id, name, next_trigger_time, prev_trigger_time, cron,
+                                  strategy, sharding_num, retry_count, status, creator, description, executor_id, executor_name, create_time, update_time)
+    values (var, concat('testTrigger-', var), 1562336661000, 0, '*/5 * * * * ?', 0, 0, 0, 1, 'admin', 'test', 1,'testExecutor',
             1562336661000, 1562336661000);
+
+    insert into tesseract_job_detail(trigger_id, class_name, create_time, creator)
+    values (var, 'tesseract.sample.TestJob', 1562336661000, 'admin');
     SET var = var + 1;
     END WHILE;
 END
