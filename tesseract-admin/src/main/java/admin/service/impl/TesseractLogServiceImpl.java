@@ -1,7 +1,6 @@
 package admin.service.impl;
 
 import admin.entity.TesseractLog;
-import admin.entity.TesseractUser;
 import admin.mapper.TesseractLogMapper;
 import admin.service.ITesseractFiredTriggerService;
 import admin.service.ITesseractLogService;
@@ -12,15 +11,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import tesseract.core.dto.TesseractAdminJobNotify;
-import tesseract.core.dto.TesseractExecutorResponse;
 import tesseract.exception.TesseractException;
 
 import javax.validation.constraints.NotNull;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static admin.constant.AdminConstant.LOG_FAIL;
 import static admin.constant.AdminConstant.LOG_SUCCESS;

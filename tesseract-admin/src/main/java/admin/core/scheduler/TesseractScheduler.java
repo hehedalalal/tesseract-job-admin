@@ -8,7 +8,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.Order;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -44,7 +43,8 @@ public class TesseractScheduler implements InitializingBean, DisposableBean {
     @Override
     public void afterPropertiesSet() {
         //开启线程
-        schedulerThread = new Thread(new TriggerTaskRunnable());
+        schedulerThread = new Thread(new TriggerTaskRunnable(), "SchedulerThread");
+        schedulerThread.setDaemon(true);
         schedulerThread.start();
         log.info("schedulerThread start");
     }

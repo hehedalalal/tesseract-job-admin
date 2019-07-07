@@ -45,8 +45,6 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
     private ITesseractLockService lockService;
     @Autowired
     private TesseractTriggerDispatcher triggerDispatcher;
-    @Autowired
-    private ITesseractFiredTriggerService firedTriggerService;
 
 
     @Transactional
@@ -74,6 +72,8 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
                 Date date = new Date();
                 date.setTime(prevTriggerTime);
                 trigger.setNextTriggerTime(cronExpression.getTimeAfter(date).getTime());
+                trigger.setPrevTriggerTime(System.currentTimeMillis());
+                log.error("nextTriggerTime:{}", new Date(trigger.getNextTriggerTime()));
             });
             this.updateBatchById(triggerList);
         }

@@ -44,7 +44,7 @@ public class TesseractExecutor implements InitializingBean, DisposableBean {
     private final String THREAD_NAME_FORMATTER = "TesseractExecutorThread-%d";
     private final AtomicInteger ATOMIC_INTEGER = new AtomicInteger(0);
     private final ThreadPoolExecutor THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(10,
-            100, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(800)
+            800, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(3000)
             , r -> new Thread(r, String.format(THREAD_NAME_FORMATTER, ATOMIC_INTEGER.getAndIncrement())));
     /**
      * constant
@@ -64,24 +64,27 @@ public class TesseractExecutor implements InitializingBean, DisposableBean {
             tesseractAdminJobNotify.setLogId(tesseractExecutorRequest.getLogId());
             tesseractAdminJobNotify.setTriggerId(tesseractExecutorRequest.getTriggerId());
             tesseractAdminJobNotify.setExecutorId(tesseractExecutorRequest.getExecutorId());
-            TesseractExecutorResponse notify = null;
+            TesseractExecutorResponse notifyResponse = null;
             try {
                 Class<?> aClass = Class.forName(className);
                 JobHandler jobHandler = (JobHandler) aClass.newInstance();
                 ExecutorContext executorContext = new ExecutorContext();
                 executorContext.setShardingIndex(tesseractExecutorRequest.getShardingIndex());
                 jobHandler.execute(executorContext);
-                notify = clientFeignService.notify(new URI(getAdminServerAddress() + NOTIFY_MAPPING), tesseractAdminJobNotify);
+                notifyResponse = clientFeignService.notify(new URI(getAdminServerAddress() + NOTIFY_MAPPING), tesseractAdminJobNotify);
             } catch (Exception e) {
                 log.error("执行异常:{}", e.getMessage());
                 tesseractAdminJobNotify.setException(e.getMessage());
                 try {
-                    notify = clientFeignService.notify(new URI(getAdminServerAddress() + NOTIFY_MAPPING), tesseractAdminJobNotify);
+                    notifyResponse = clientFeignService.notify(new URI(getAdminServerAddress() + NOTIFY_MAPPING), tesseractAdminJobNotify);
                 } catch (URISyntaxException ex) {
                     log.error("执行异常URI异常:{}", e.getMessage());
                 }
             }
-            log.info("执行通知结果:{}", notify);
+            if (notifyResponse != null && notifyResponse.getStatus() != TesseractExecutorResponse.SUCCESS_STATUS) {
+                log.error("通知执行器出错:{}", notifyResponse);
+            }
+            log.info("执行通知结果:{}", notifyResponse);
         });
         return TesseractExecutorResponse.builder().status(TesseractExecutorResponse.SUCCESS_STATUS).body("成功进入队列").build();
     }
