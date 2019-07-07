@@ -2,23 +2,18 @@ package admin.service.impl;
 
 import admin.core.scheduler.CronExpression;
 import admin.core.scheduler.TesseractTriggerDispatcher;
-import admin.entity.TesseractFiredTrigger;
 import admin.entity.TesseractTrigger;
 import admin.mapper.TesseractTriggerMapper;
 import admin.pojo.PageVO;
 import admin.pojo.TriggerVO;
-import admin.service.ITesseractFiredTriggerService;
 import admin.service.ITesseractLockService;
 import admin.service.ITesseractTriggerService;
-import admin.util.AdminUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.C;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +21,9 @@ import org.springframework.util.CollectionUtils;
 import tesseract.exception.TesseractException;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 
 import static admin.constant.AdminConstant.*;
 
@@ -47,7 +44,6 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
     private TesseractTriggerDispatcher triggerDispatcher;
 
 
-    @Transactional
     @Override
     public List<TesseractTrigger> findTriggerWithLock(int batchSize, long time, Integer timeWindowSize) {
         lockService.lock(TRIGGER_LOCK_NAME);
@@ -57,6 +53,8 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
         Page<TesseractTrigger> page = new Page<>(1, batchSize);
         IPage<TesseractTrigger> listPage = page(page, queryWrapper);
         List<TesseractTrigger> triggerList = listPage.getRecords();
+        Date dateTmp = new Date();
+        dateTmp.setTime(time + timeWindowSize);
         if (!CollectionUtils.isEmpty(triggerList)) {
             triggerList.parallelStream().forEach(trigger -> {
                 CronExpression cronExpression = null;

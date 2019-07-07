@@ -147,7 +147,7 @@ BEGIN
     insert into tesseract_trigger(id, name, next_trigger_time, prev_trigger_time, cron,
                                   strategy, sharding_num, retry_count, status, creator, description, executor_id,
                                   executor_name, create_time, update_time)
-    values (var, concat('testTrigger-', var), 1562479500000, 0, '* */15 * * * ?', 0, 0, 0, 1, 'admin', 'test', 1,
+    values (var, concat('testTrigger-', var), 1562479500000, 0, '*/20 * * * * ?', 0, 0, 0, 1, 'admin', 'test', 1,
             'testExecutor',
             1562479500000, 1562479500000);
 
@@ -159,4 +159,4 @@ BEGIN
 END
 //
 DELIMITER ;
-call insert_trigger(10000);
+call insert_trigger(1000);

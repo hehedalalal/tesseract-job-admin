@@ -1,5 +1,7 @@
 package admin.core.scheduler;
 
+import admin.core.scheduler.pool.DefaultSchedulerThreadPool;
+import admin.core.scheduler.pool.ISchedulerThreadPool;
 import admin.entity.TesseractTrigger;
 import admin.service.ITesseractTriggerService;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class TesseractScheduler implements InitializingBean, DisposableBean {
@@ -20,14 +23,16 @@ public class TesseractScheduler implements InitializingBean, DisposableBean {
     @Autowired
     private TesseractTriggerDispatcher tesseractTriggerDispatcher;
 
+    private ISchedulerThreadPool threadPool = new DefaultSchedulerThreadPool(250);
 
-    private int maxBatchSize = 50;
-    private int timeWindowSize = 10;
+    private int maxBatchSize = 250;
+    private int timeWindowSize = 0;
     private int sleepTime = 20;
 
     private Thread schedulerThread;
     private volatile boolean isStop = false;
     private volatile boolean isPause = true;
+    private volatile AtomicInteger atomicInteger = new AtomicInteger(0);
 
     public void destroy() {
         isStop = true;
@@ -61,7 +66,11 @@ public class TesseractScheduler implements InitializingBean, DisposableBean {
                     } catch (InterruptedException e) {
                     }
                 }
-                List<TesseractTrigger> triggerList = tesseractTriggerService.findTriggerWithLock(maxBatchSize, System.currentTimeMillis(), timeWindowSize);
+                int blockGetAvailableThreadNum = threadPool.blockGetAvailableThreadNum();
+                log.error("可用线程数:{}", blockGetAvailableThreadNum);
+                List<TesseractTrigger> triggerList = tesseractTriggerService.findTriggerWithLock(blockGetAvailableThreadNum, System.currentTimeMillis(), timeWindowSize);
+                log.error("扫描触发器数量:{}", triggerList.size());
+                atomicInteger.addAndGet(triggerList.size());
                 log.info("schedulerThread扫描到触发器：{}", triggerList);
                 if (!CollectionUtils.isEmpty(triggerList)) {
                     //降序排序等待时间差
@@ -78,9 +87,12 @@ public class TesseractScheduler implements InitializingBean, DisposableBean {
                             }
                         }
                     }
-                    tesseractTriggerDispatcher.dispatchTrigger(triggerList, false);
+                    threadPool.runJob(() -> {
+                        tesseractTriggerDispatcher.dispatchTrigger(triggerList, false);
+                    });
                     continue;
                 }
+                log.error(atomicInteger.toString());
                 try {
                     Thread.sleep(sleepTime * 1000);
                 } catch (InterruptedException e) {
