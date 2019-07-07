@@ -65,15 +65,11 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
-                Long prevTriggerTime = trigger.getPrevTriggerTime();
-                if (prevTriggerTime == 0) {
-                    prevTriggerTime = System.currentTimeMillis();
-                }
+                long currentTimeMillis = System.currentTimeMillis();
                 Date date = new Date();
-                date.setTime(prevTriggerTime);
+                date.setTime(currentTimeMillis);
                 trigger.setNextTriggerTime(cronExpression.getTimeAfter(date).getTime());
-                trigger.setPrevTriggerTime(System.currentTimeMillis());
-                log.error("nextTriggerTime:{}", new Date(trigger.getNextTriggerTime()));
+                trigger.setPrevTriggerTime(currentTimeMillis);
             });
             this.updateBatchById(triggerList);
         }
