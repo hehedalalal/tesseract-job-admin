@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>tesseract-core</artifactId>
+    <artifactId>tesseract-common</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>

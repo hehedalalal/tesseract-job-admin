@@ -23,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>com.nickle</groupId>
-            <artifactId>tesseract-core</artifactId>
+            <artifactId>tesseract-common</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

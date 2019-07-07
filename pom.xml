@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <modules>
         <module>tesseract-admin</module>
-        <module>tesseract-core</module>
+        <module>tesseract-common</module>
         <module>tesseract-client</module>
         <module>tesseract-sample</module>
     </modules>
