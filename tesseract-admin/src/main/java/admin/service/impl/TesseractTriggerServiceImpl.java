@@ -5,6 +5,8 @@ import admin.core.scheduler.TesseractTriggerDispatcher;
 import admin.entity.TesseractFiredTrigger;
 import admin.entity.TesseractTrigger;
 import admin.mapper.TesseractTriggerMapper;
+import admin.pojo.PageVO;
+import admin.pojo.TriggerVO;
 import admin.service.ITesseractFiredTriggerService;
 import admin.service.ITesseractLockService;
 import admin.service.ITesseractTriggerService;
@@ -58,49 +60,26 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
         IPage<TesseractTrigger> listPage = page(page, queryWrapper);
         List<TesseractTrigger> triggerList = listPage.getRecords();
         if (!CollectionUtils.isEmpty(triggerList)) {
-            //更新触发器状态为获取状态
-            updateTriggerStatus(triggerList, TRGGER_STATUS_ACCQUIRED);
+            triggerList.parallelStream().forEach(trigger -> {
+                CronExpression cronExpression = null;
+                try {
+                    cronExpression = new CronExpression(trigger.getCron());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                Long prevTriggerTime = trigger.getPrevTriggerTime();
+                if (prevTriggerTime == 0) {
+                    prevTriggerTime = System.currentTimeMillis();
+                }
+                Date date = new Date();
+                date.setTime(prevTriggerTime);
+                trigger.setNextTriggerTime(cronExpression.getTimeAfter(date).getTime());
+            });
+            this.updateBatchById(triggerList);
         }
         return triggerList;
     }
 
-    @Transactional
-    @Override
-    public void updateTriggerStatus(List<TesseractTrigger> triggerList, Integer status) {
-        triggerList.parallelStream().forEach(trigger -> trigger.setStatus(status));
-        this.updateBatchById(triggerList);
-    }
-
-    @Transactional
-    @Override
-    public void updateTriggerStatusAndCalculate(List<TesseractTrigger> triggerList, Integer status) {
-        List<Integer> triggerIdList = Collections.synchronizedList(Lists.newArrayList());
-        triggerList.parallelStream().forEach(trigger -> {
-            try {
-                CronExpression cronExpression = new CronExpression(trigger.getCron());
-                Date date = new Date();
-                date.setTime(trigger.getPrevTriggerTime());
-                trigger.setNextTriggerTime(cronExpression.getTimeAfter(date).getTime());
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            triggerIdList.add(trigger.getId());
-            trigger.setStatus(status);
-        });
-        this.updateBatchById(triggerList);
-    }
-
-    @Transactional
-    @Override
-    public void updateTriggerStatusAndDeleteFiredTrigger(List<TesseractTrigger> triggerList, Integer status) {
-        List<Integer> triggerIdList = Collections.synchronizedList(Lists.newArrayList());
-        triggerList.parallelStream().forEach(trigger -> {
-            triggerIdList.add(trigger.getId());
-            trigger.setStatus(status);
-        });
-        this.updateBatchById(triggerList);
-        firedTriggerService.removeByIds(triggerIdList);
-    }
 
     @Transactional
     @Override
@@ -119,11 +98,20 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
 
     @Transactional
     @Override
-    public IPage<TesseractTrigger> listByPage(Integer currentPage, Integer pageSize, TesseractTrigger condition) {
+    public TriggerVO listByPage(Integer currentPage, Integer pageSize, TesseractTrigger condition) {
         Page<TesseractTrigger> page = new Page<>(currentPage, pageSize);
         QueryWrapper<TesseractTrigger> queryWrapper = new QueryWrapper<>();
         LambdaQueryWrapper<TesseractTrigger> lambda = queryWrapper.lambda();
-        return page(page, queryWrapper);
+        IPage<TesseractTrigger> pageInfo = page(page, queryWrapper);
+        TriggerVO triggerVO = new TriggerVO();
+        PageVO pageVO = new PageVO();
+        pageVO.setCurrentPage(pageInfo.getCurrent());
+        pageVO.setPageSize(pageInfo.getSize());
+        pageVO.setTotal(pageInfo.getTotal());
+        triggerVO.setPageInfo(pageVO);
+        List<TesseractTrigger> triggerList = pageInfo.getRecords();
+        triggerVO.setTriggerList(triggerList);
+        return triggerVO;
     }
 
     @Transactional

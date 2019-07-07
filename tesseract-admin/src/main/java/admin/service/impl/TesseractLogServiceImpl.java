@@ -20,6 +20,8 @@ import tesseract.core.dto.TesseractAdminJobNotify;
 import tesseract.core.dto.TesseractExecutorResponse;
 import tesseract.exception.TesseractException;
 
+import javax.validation.constraints.NotNull;
+
 import static admin.constant.AdminConstant.LOG_FAIL;
 import static admin.constant.AdminConstant.LOG_SUCCESS;
 
@@ -44,6 +46,7 @@ public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, Tes
         Long logId = tesseractAdminJobNotify.getLogId();
         String exception = tesseractAdminJobNotify.getException();
         Integer triggerId = tesseractAdminJobNotify.getTriggerId();
+        @NotNull Integer executorId = tesseractAdminJobNotify.getExecutorId();
         TesseractLog tesseractLog = this.getById(logId);
         if (tesseractLog == null) {
             log.error("获取日志为空:{}", tesseractAdminJobNotify);
@@ -56,7 +59,8 @@ public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, Tes
             tesseractLog.setStatus(LOG_SUCCESS);
             tesseractLog.setMsg("执行成功");
         }
-        firedTriggerService.removeFiredTriggerAndUpdateLog(triggerId, tesseractLog);
+        tesseractLog.setEndTime(System.currentTimeMillis());
+        firedTriggerService.removeFiredTriggerAndUpdateLog(triggerId, executorId, tesseractLog);
     }
 
     @Override

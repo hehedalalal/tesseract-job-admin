@@ -25,6 +25,8 @@ create table tesseract_trigger
     status            tinyint      not null,
     creator           varchar(255) not null,
     description       text         not null,
+    executor_id       int unsigned not null,
+    executor_name     varchar(30)  not null,
     create_time       bigint       not null,
     update_time       bigint       not null,
     index (status),
@@ -36,7 +38,10 @@ create table tesseract_fired_trigger
 (
     id          int unsigned primary key auto_increment,
     triggerId   int unsigned not null,
+    class_name  varchar(255) not null,
     name        varchar(30)  not null,
+    socket      varchar(255) not null,
+    executor_id int unsigned not null,
     create_time bigint       not null
 ) engine = InnoDB
   default charset = utf8;
@@ -45,6 +50,17 @@ create table tesseract_executor
 (
     id          int unsigned primary key auto_increment,
     name        varchar(30)  not null,
+    creator     varchar(255) not null,
+    description text         not null,
+    create_time bigint       not null,
+    unique (name)
+) engine = InnoDB
+  default charset = utf8;
+
+create table tesseract_executor_detail
+(
+    id          int unsigned primary key auto_increment,
+    executor_id int unsigned not null,
     socket      varchar(255) not null,
     create_time bigint       not null,
     update_time bigint       not null,
@@ -52,14 +68,16 @@ create table tesseract_executor
 ) engine = InnoDB
   default charset = utf8;
 
-create table tesseract_executor_trigger_link
-(
-    id          int unsigned primary key auto_increment,
-    trigger_id  int unsigned not null,
-    executor_id int unsigned not null,
-    unique (trigger_id, executor_id)
-) engine = InnoDB
-  default charset = utf8;
+
+
+# create table tesseract_executor_trigger_link
+# (
+#     id          int unsigned primary key auto_increment,
+#     trigger_id  int unsigned not null,
+#     executor_id int unsigned not null,
+#     unique (trigger_id, executor_id)
+# ) engine = InnoDB
+#   default charset = utf8;
 
 
 create table tesseract_lock
@@ -110,5 +128,23 @@ create table tesseract_log
 insert into tesseract_user(name, password, status, create_time, update_time)
 values ('admin', '21232F297A57A5A743894A0E4A801FC3', 0, 1562336661000, 1562336661000);
 insert into tesseract_trigger( name, next_trigger_time, prev_trigger_time, cron, strategy, sharding_num, retry_count
-                             , status, creator, description, create_time, update_time)
-values ('testTrigger', 0, 0, '* * * * * ?', 0, 0, 0, 0, 'admin', 'test', 1562336661000, 1562336661000);
+                             , status, creator, description, executor_id, create_time, update_time)
+values ('testTrigger', 1562336661000, 0, '*/5 * * * * ?', 0, 0, 0, 1, 'admin', 'test', 1, 1562336661000, 1562336661000);
+
+
+DELIMITER //
+CREATE PROCEDURE insert_trigger(IN loop_times INT)
+BEGIN
+    DECLARE var INT DEFAULT 1;
+    WHILE var <= loop_times DO
+    insert into tesseract_trigger( id, name, next_trigger_time, prev_trigger_time, cron, strategy, sharding_num
+                                 , retry_count
+                                 , status, creator, description, executor_id, create_time, update_time)
+    values (var, concat('testTrigger-', var), 1562336661000, 0, '*/5 * * * * ?', 0, 0, 0, 1, 'admin', 'test', 1,
+            1562336661000, 1562336661000);
+    SET var = var + 1;
+    END WHILE;
+END
+//
+DELIMITER ;
+call insert_trigger(10000);

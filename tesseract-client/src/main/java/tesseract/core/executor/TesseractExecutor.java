@@ -63,6 +63,7 @@ public class TesseractExecutor implements InitializingBean, DisposableBean {
             TesseractAdminJobNotify tesseractAdminJobNotify = new TesseractAdminJobNotify();
             tesseractAdminJobNotify.setLogId(tesseractExecutorRequest.getLogId());
             tesseractAdminJobNotify.setTriggerId(tesseractExecutorRequest.getTriggerId());
+            tesseractAdminJobNotify.setExecutorId(tesseractExecutorRequest.getExecutorId());
             TesseractExecutorResponse notify = null;
             try {
                 Class<?> aClass = Class.forName(className);

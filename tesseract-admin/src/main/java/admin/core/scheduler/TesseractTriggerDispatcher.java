@@ -3,7 +3,6 @@ package admin.core.scheduler;
 import admin.core.scheduler.router.impl.HashRouter;
 import admin.entity.*;
 import admin.service.*;
-import admin.util.AdminUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import feignService.IAdminFeignService;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,6 @@ import tesseract.core.dto.TesseractExecutorResponse;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -33,11 +31,9 @@ public class TesseractTriggerDispatcher implements DisposableBean {
     @Autowired
     private ITesseractLogService tesseractLogService;
     @Autowired
-    private ITesseractExecutorTriggerLinkService triggerLinkService;
+    private ITesseractExecutorDetailService executorDetailService;
     @Autowired
     private ITesseractExecutorService executorService;
-    @Autowired
-    private ITesseractTriggerService triggerService;
     @Autowired
     private ITesseractFiredTriggerService firedTriggerService;
     @Autowired
@@ -55,9 +51,6 @@ public class TesseractTriggerDispatcher implements DisposableBean {
 
     public void dispatchTrigger(List<TesseractTrigger> triggerList, boolean isOnce) {
         triggerList.parallelStream().forEach(trigger -> {
-            //更新触发器下一次执行时间
-            trigger.setPrevTriggerTime(System.currentTimeMillis());
-            triggerService.updateTriggerStatusAndCalculate(Arrays.asList(trigger), TRGGER_STATUS_STARTING);
             THREAD_POOL_EXECUTOR.execute(new TaskRunnable(trigger, isOnce));
         });
     }
@@ -74,12 +67,6 @@ public class TesseractTriggerDispatcher implements DisposableBean {
         @Override
         public void run() {
             try {
-                //将触发器加入fired_trigger
-                TesseractFiredTrigger tesseractFiredTrigger = new TesseractFiredTrigger();
-                tesseractFiredTrigger.setCreateTime(System.currentTimeMillis());
-                tesseractFiredTrigger.setName(trigger.getName());
-                tesseractFiredTrigger.setTriggerId(trigger.getId());
-                firedTriggerService.save(tesseractFiredTrigger);
                 //构建日志
                 TesseractLog tesseractLog = new TesseractLog();
                 tesseractLog.setClassName("");
@@ -101,12 +88,21 @@ public class TesseractTriggerDispatcher implements DisposableBean {
                 }
                 tesseractLog.setClassName(jobDetail.getClassName());
                 //获取执行器
-                QueryWrapper<TesseractExecutorTriggerLink> queryWrapper = new QueryWrapper<>();
-                queryWrapper.lambda().eq(TesseractExecutorTriggerLink::getTriggerId, trigger.getId());
-                List<TesseractExecutorTriggerLink> executorTriggerLinkList = triggerLinkService.list(queryWrapper);
-                if (CollectionUtils.isEmpty(executorTriggerLinkList)) {
+                TesseractExecutor executor = executorService.getById(trigger.getExecutorId());
+                if (executor == null) {
                     tesseractLog.setStatus(LOG_FAIL);
-                    tesseractLog.setMsg("没有发现运行执行器");
+                    tesseractLog.setMsg("没有找到可用执行器");
+                    tesseractLog.setSocket(NULL_SOCKET);
+                    tesseractLog.setEndTime(System.currentTimeMillis());
+                    tesseractLogService.save(tesseractLog);
+                    log.info("tesseractLog:{}", tesseractLog);
+                    return;
+                }
+                QueryWrapper<TesseractExecutorDetail> executorDetailQueryWrapper = new QueryWrapper<>();
+                List<TesseractExecutorDetail> executorDetailList = executorDetailService.list(executorDetailQueryWrapper);
+                if (CollectionUtils.isEmpty(executorDetailList)) {
+                    tesseractLog.setStatus(LOG_FAIL);
+                    tesseractLog.setMsg("执行器下没有可用机器");
                     tesseractLog.setSocket(NULL_SOCKET);
                     tesseractLog.setEndTime(System.currentTimeMillis());
                     tesseractLogService.save(tesseractLog);
@@ -115,7 +111,7 @@ public class TesseractTriggerDispatcher implements DisposableBean {
                 }
                 //todo 广播
                 //路由发送执行
-                routerExecute(tesseractLog, executorTriggerLinkList, jobDetail);
+                routerExecute(tesseractLog, executorDetailList, jobDetail);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -125,27 +121,37 @@ public class TesseractTriggerDispatcher implements DisposableBean {
          * 根据路由策略，选择机器执行
          *
          * @param tesseractLog
-         * @param executorTriggerLinkList
+         * @param executorDetailList
          * @param jobDetail
          */
-        private void routerExecute(TesseractLog tesseractLog, List<TesseractExecutorTriggerLink> executorTriggerLinkList, TesseractJobDetail jobDetail) {
-            TesseractExecutorTriggerLink executorTriggerLink = SCHEDULE_ROUTER_MAP.getOrDefault(trigger.getStrategy(), new HashRouter()).routerExecutor(executorTriggerLinkList);
-            TesseractExecutor tesseractExecutor = executorService.getById(executorTriggerLink.getExecutorId());
+        private void routerExecute(TesseractLog tesseractLog, List<TesseractExecutorDetail> executorDetailList, TesseractJobDetail jobDetail) {
+            TesseractExecutorDetail executorDetail = SCHEDULE_ROUTER_MAP.getOrDefault(trigger.getStrategy(), new HashRouter()).routerExecutor(executorDetailList);
             //首先保存日志，获取到日志id，便于异步更新
-            tesseractLog.setSocket(tesseractExecutor.getSocket());
+            tesseractLog.setSocket(executorDetail.getSocket());
             tesseractLog.setStatus(LOG_INIT);
             tesseractLog.setMsg("等待执行器执行");
             tesseractLogService.save(tesseractLog);
+            //将触发器加入fired_trigger
+            TesseractFiredTrigger tesseractFiredTrigger = new TesseractFiredTrigger();
+            tesseractFiredTrigger.setCreateTime(System.currentTimeMillis());
+            tesseractFiredTrigger.setName(trigger.getName());
+            tesseractFiredTrigger.setTriggerId(trigger.getId());
+            tesseractFiredTrigger.setClassName(jobDetail.getClassName());
+            tesseractFiredTrigger.setExecutorId(executorDetail.getExecutorId());
+            tesseractFiredTrigger.setSocket(executorDetail.getSocket());
+            firedTriggerService.save(tesseractFiredTrigger);
             //构建请求
             TesseractExecutorRequest executorRequest = new TesseractExecutorRequest();
             executorRequest.setClassName(jobDetail.getClassName());
             executorRequest.setShardingIndex(trigger.getShardingNum());
             executorRequest.setLogId(tesseractLog.getId());
             executorRequest.setTriggerId(trigger.getId());
+            executorRequest.setExecutorId(executorDetail.getExecutorId());
             //发送调度请求
-            TesseractExecutorResponse response;
+            TesseractExecutorResponse response = TesseractExecutorResponse.FAIL;
+            log.info("开始调度:{}", executorRequest);
             try {
-                response = feignService.sendToExecutor(new URI(HTTP_PREFIX + tesseractExecutor.getSocket() + EXECUTE_MAPPING), executorRequest);
+                response = feignService.sendToExecutor(new URI(HTTP_PREFIX + executorDetail.getSocket() + EXECUTE_MAPPING), executorRequest);
             } catch (URISyntaxException e) {
                 log.error("URI异常:{}", e.getMessage());
                 response = TesseractExecutorResponse.builder().body("URI异常").status(TesseractExecutorResponse.FAIL_STAUTS).build();
@@ -154,6 +160,8 @@ public class TesseractTriggerDispatcher implements DisposableBean {
             if (response.getStatus() != TesseractExecutorResponse.SUCCESS_STATUS) {
                 tesseractLog.setStatus(LOG_FAIL);
             } else {
+                tesseractLog.setStatus(LOG_WAIT);
+                tesseractLogService.updateById(tesseractLog);
                 return;
             }
             tesseractLog.setEndTime(System.currentTimeMillis());
@@ -162,18 +170,13 @@ public class TesseractTriggerDispatcher implements DisposableBean {
                 tesseractLog.setMsg(body.toString());
             }
             //移出执行表并修改日志状态
-            firedTriggerService.removeFiredTriggerAndUpdateLog(trigger.getId(), tesseractLog);
+            firedTriggerService.removeFiredTriggerAndUpdateLog(trigger.getId(), executorDetail.getId(), tesseractLog);
             log.info("tesseractLog:{}", tesseractLog);
         }
 
     }
 
     public void destroy() {
-        THREAD_POOL_EXECUTOR.shutdown();
-        try {
-            THREAD_POOL_EXECUTOR.awaitTermination(1, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        THREAD_POOL_EXECUTOR.shutdownNow();
     }
 }

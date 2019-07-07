@@ -34,15 +34,8 @@ public class TesseractTriggerController {
     @GetMapping("/triggerList")
     public CommonResponseVO tesseractTriggerList(@NotNull @Min(1) Integer currentPage
             , @NotNull @Min(1) @Max(50) Integer pageSize, TesseractTrigger condition) {
-        IPage<TesseractTrigger> tesseractTriggerIPage = triggerService.listByPage(currentPage, pageSize, condition);
-        TriggerVO triggerVO = new TriggerVO();
-        PageVO pageVO = new PageVO();
-        pageVO.setCurrentPage(tesseractTriggerIPage.getCurrent());
-        pageVO.setPageSize(tesseractTriggerIPage.getSize());
-        pageVO.setTotal(tesseractTriggerIPage.getTotal());
-        triggerVO.setPageInfo(pageVO);
-        triggerVO.setTriggerList(tesseractTriggerIPage.getRecords());
-        return CommonResponseVO.success(triggerVO);
+        TriggerVO tesseractTriggerIPage = triggerService.listByPage(currentPage, pageSize, condition);
+        return CommonResponseVO.success(tesseractTriggerIPage);
     }
 
     @PostMapping("/addTrigger")

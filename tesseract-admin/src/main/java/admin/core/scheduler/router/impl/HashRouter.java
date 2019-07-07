@@ -1,7 +1,8 @@
 package admin.core.scheduler.router.impl;
 
 import admin.core.scheduler.router.IScheduleRouter;
-import admin.entity.TesseractExecutorTriggerLink;
+import admin.entity.TesseractExecutor;
+import admin.entity.TesseractExecutorDetail;
 
 import java.util.List;
 
@@ -11,8 +12,8 @@ import java.util.List;
 public class HashRouter implements IScheduleRouter {
 
     @Override
-    public TesseractExecutorTriggerLink routerExecutor(List<TesseractExecutorTriggerLink> tesseractExecutorTriggerLink) {
+    public TesseractExecutorDetail routerExecutor(List<TesseractExecutorDetail> tesseractExecutorList) {
 
-        return tesseractExecutorTriggerLink.get(tesseractExecutorTriggerLink.hashCode() % tesseractExecutorTriggerLink.size());
+        return tesseractExecutorList.get(tesseractExecutorList.hashCode() % tesseractExecutorList.size());
     }
 }

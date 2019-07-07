@@ -51,6 +51,12 @@ public class TesseractTrigger implements Serializable {
 
     private Integer status;
 
+    @NotNull
+    private Integer executorId;
+
+    @NotBlank
+    private String executor_name;
+
     private String creator = "admin";
 
     private Long createTime;

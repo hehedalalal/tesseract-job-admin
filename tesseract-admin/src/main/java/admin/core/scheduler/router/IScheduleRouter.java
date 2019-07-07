@@ -1,9 +1,10 @@
 package admin.core.scheduler.router;
 
-import admin.entity.TesseractExecutorTriggerLink;
+import admin.entity.TesseractExecutor;
+import admin.entity.TesseractExecutorDetail;
 
 import java.util.List;
 
 public interface IScheduleRouter {
-    TesseractExecutorTriggerLink routerExecutor(List<TesseractExecutorTriggerLink> tesseractExecutorTriggerLink);
+    TesseractExecutorDetail routerExecutor(List<TesseractExecutorDetail> tesseractExecutorList);
 }

@@ -13,5 +13,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2019-07-06
  */
 public interface ITesseractFiredTriggerService extends IService<TesseractFiredTrigger> {
-    void removeFiredTriggerAndUpdateLog(Integer triggerId, TesseractLog log);
+    void removeFiredTriggerAndUpdateLog(Integer triggerId, Integer executorId, TesseractLog log);
 }

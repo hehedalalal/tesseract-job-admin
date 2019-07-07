@@ -112,7 +112,7 @@ public class CodeGenerator {
 //                "tesseract_user"
 //        );
         strategy.setInclude(
-                "tesseract_user","tesseract_token"
+                "tesseract_executor_detail"
         );
 
         strategy.setControllerMappingHyphenStyle(true);

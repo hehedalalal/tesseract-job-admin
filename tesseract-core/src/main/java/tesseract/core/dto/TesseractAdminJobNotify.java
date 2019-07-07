@@ -17,6 +17,8 @@ public class TesseractAdminJobNotify {
     private Long logId;
     @NotNull
     private Integer triggerId;
+    @NotNull
+    private Integer executorId;
     private String exception;
 //    private String log;
 }

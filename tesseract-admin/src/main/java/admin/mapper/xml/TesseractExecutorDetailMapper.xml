@@ -1,21 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="admin.mapper.TesseractFiredTriggerMapper">
+<mapper namespace="admin.mapper.TesseractExecutorDetailMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="admin.entity.TesseractFiredTrigger">
+    <resultMap id="BaseResultMap" type="admin.entity.TesseractExecutorDetail">
         <id column="id" property="id" />
-        <result column="triggerId" property="triggerId" />
-        <result column="class_name" property="className" />
-        <result column="name" property="name" />
-        <result column="socket" property="socket" />
         <result column="executor_id" property="executorId" />
+        <result column="socket" property="socket" />
         <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, triggerId, class_name, name, socket, executor_id, create_time
+        id, executor_id, socket, create_time, update_time
     </sql>
 
 </mapper>

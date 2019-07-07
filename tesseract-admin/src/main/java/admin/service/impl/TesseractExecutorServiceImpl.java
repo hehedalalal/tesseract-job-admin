@@ -1,15 +1,20 @@
 package admin.service.impl;
 
 import admin.entity.TesseractExecutor;
-import admin.entity.TesseractExecutorTriggerLink;
+import admin.entity.TesseractExecutorDetail;
 import admin.entity.TesseractJobDetail;
 import admin.entity.TesseractTrigger;
 import admin.mapper.TesseractExecutorMapper;
+import admin.pojo.ExecutorVO;
+import admin.pojo.PageVO;
+import admin.pojo.TesseractExecutorVO;
+import admin.service.ITesseractExecutorDetailService;
 import admin.service.ITesseractExecutorService;
-import admin.service.ITesseractExecutorTriggerLinkService;
 import admin.service.ITesseractJobDetailService;
 import admin.service.ITesseractTriggerService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
@@ -38,9 +43,13 @@ import java.util.List;
 @Transactional
 public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorMapper, TesseractExecutor> implements ITesseractExecutorService {
     @Autowired
-    private ITesseractTriggerService tesseractTriggerService;
+    private ITesseractTriggerService triggerService;
+
     @Autowired
-    private ITesseractExecutorTriggerLinkService triggerLinkService;
+    private ITesseractExecutorService executorService;
+
+    @Autowired
+    private ITesseractExecutorDetailService executorDetailService;
     @Autowired
     private ITesseractJobDetailService jobDetailService;
 
@@ -52,29 +61,69 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
         return toRegistry(socket, tesseractAdminRegistryRequest.getTesseractAdminJobDetailDTOList());
     }
 
+    @Override
+    public ExecutorVO listByPage(Long currentPage, Long pageSize, TesseractExecutor condition) {
+        ExecutorVO executorVO = new ExecutorVO();
+        Page<TesseractExecutor> tesseractExecutorPage = new Page<>(currentPage, pageSize);
+        IPage<TesseractExecutor> page = page(tesseractExecutorPage);
+        PageVO pageVO = new PageVO();
+        pageVO.setCurrentPage(currentPage);
+        pageVO.setPageSize(pageSize);
+        pageVO.setTotal(page.getTotal());
+        List<TesseractExecutorVO> executorVOList = Collections.synchronizedList(Lists.newArrayList());
+        List<TesseractExecutor> executorList = page.getRecords();
+        executorList.parallelStream().forEach(executor -> {
+            QueryWrapper<TesseractExecutorDetail> detailQueryWrapper = new QueryWrapper<>();
+            detailQueryWrapper.lambda().eq(TesseractExecutorDetail::getExecutorId, executor.getId());
+            List<TesseractExecutorDetail> executorDetailList = executorDetailService.list(detailQueryWrapper);
+            TesseractExecutorVO tesseractExecutorVO = new TesseractExecutorVO();
+            tesseractExecutorVO.setExecutor(executor);
+            tesseractExecutorVO.setExecutorDetailList(executorDetailList);
+            executorVOList.add(tesseractExecutorVO);
+        });
+        executorVO.setPageInfo(pageVO);
+        executorVO.setExecutorList(executorVOList);
+        return executorVO;
+    }
+
+    @Override
+    public void saveExecutor(TesseractExecutor tesseractExecutor) {
+        tesseractExecutor.setCreateTime(System.currentTimeMillis());
+        tesseractExecutor.setCreator("admin");
+        save(tesseractExecutor);
+    }
+
     private TesseractAdminRegistryResDTO toRegistry(String socket, List<TesseractAdminJobDetailDTO> tesseractAdminJobDetailDTOList) {
-        // 注册主机
-        final TesseractExecutor executor = registryExecutor(socket);
-        final List<String> notTriggerNameList = Collections.synchronizedList(Lists.newArrayList());
         final List<String> repeatJobList = Collections.synchronizedList(Lists.newArrayList());
         List<TesseractJobDetail> jobDetailList = Collections.synchronizedList(Lists.newArrayList());
+        List<String> noExecutorList = Collections.synchronizedList(Lists.newArrayList());
+        List<String> noTriggerList = Collections.synchronizedList(Lists.newArrayList());
         //保存job
         tesseractAdminJobDetailDTOList.parallelStream().forEach(tesseractAdminJobDetailDTO -> {
                     @NotBlank String className = tesseractAdminJobDetailDTO.getClassName();
                     @NotBlank String triggerName = tesseractAdminJobDetailDTO.getTriggerName();
-                    //检测trigger
-                    QueryWrapper<TesseractTrigger> queryWrapper = new QueryWrapper<>();
-                    queryWrapper.lambda().eq(TesseractTrigger::getName, triggerName);
-                    TesseractTrigger trigger = tesseractTriggerService.getOne(queryWrapper);
+                    //检测触发器是否存在
+                    QueryWrapper<TesseractTrigger> triggerQueryWrapper = new QueryWrapper<>();
+                    triggerQueryWrapper.lambda().eq(TesseractTrigger::getName, triggerName);
+                    TesseractTrigger trigger = triggerService.getOne(triggerQueryWrapper);
                     if (trigger == null) {
                         log.warn("触发器{}不存在", triggerName);
-                        notTriggerNameList.add(triggerName);
+                        noTriggerList.add(triggerName);
                         return;
                     }
-                    //找到trigger需要和executor绑定
-                    bindExecutor(executor, trigger);
+                    //检测执行器器是否存在
+                    @NotNull Integer executorId = trigger.getExecutorId();
+                    TesseractExecutor executor = executorService.getById(executorId);
+                    if (executor == null) {
+                        log.warn("执行器{}不存在", executorId);
+                        noExecutorList.add(executorId.toString());
+                        return;
+                    }
+
+                    bindExecutor(executor, socket);
                     //以防任务重复注册，添加进job
                     QueryWrapper<TesseractJobDetail> jobDetailQueryWrapper = new QueryWrapper<>();
+                    jobDetailQueryWrapper.lambda().eq(TesseractJobDetail::getTriggerId, trigger.getId()).eq(TesseractJobDetail::getClassName, className);
                     TesseractJobDetail jobDetail = jobDetailService.getOne(jobDetailQueryWrapper);
                     if (jobDetail != null) {
                         log.warn("重复任务{}", jobDetail);
@@ -92,52 +141,31 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
         // todo 由于多实例并发，这里插入任务需要加锁 目前占时采用 数据库唯一索引来保证不重复
         jobDetailService.saveBatch(jobDetailList);
         TesseractAdminRegistryResDTO tesseractAdminRegistryResDTO = new TesseractAdminRegistryResDTO();
-        tesseractAdminRegistryResDTO.setNotTriggerNameList(notTriggerNameList);
+        tesseractAdminRegistryResDTO.setNotTriggerNameList(noTriggerList);
+        tesseractAdminRegistryResDTO.setNoExecutorList(noExecutorList);
         tesseractAdminRegistryResDTO.setRepeatJobList(repeatJobList);
         return tesseractAdminRegistryResDTO;
     }
 
     /**
-     * 将触发器和执行器绑定
-     *
      * @param executor
      */
-    private void bindExecutor(TesseractExecutor executor, TesseractTrigger trigger) {
+    private void bindExecutor(TesseractExecutor executor, String socket) {
         //防止重复插入
         Integer executorId = executor.getId();
-        Integer triggerId = trigger.getId();
-        QueryWrapper<TesseractExecutorTriggerLink> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(TesseractExecutorTriggerLink::getTriggerId, triggerId).eq(TesseractExecutorTriggerLink::getExecutorId, executorId);
-        TesseractExecutorTriggerLink tesseractExecutorTriggerLink = triggerLinkService.getOne(queryWrapper);
-        if (tesseractExecutorTriggerLink != null) {
-            log.warn("执行器触发器关联{}已存在，将忽略注册", tesseractExecutorTriggerLink);
+        QueryWrapper<TesseractExecutorDetail> executorDetailQueryWrapper = new QueryWrapper<>();
+        executorDetailQueryWrapper.lambda().eq(TesseractExecutorDetail::getSocket, socket);
+        TesseractExecutorDetail executorDetail = executorDetailService.getOne(executorDetailQueryWrapper);
+        if (executorDetail != null) {
+            log.warn("机器{}已注册，将忽略关联", executorDetail);
             return;
         }
-        tesseractExecutorTriggerLink = new TesseractExecutorTriggerLink();
-        tesseractExecutorTriggerLink.setExecutorId(executorId);
-        tesseractExecutorTriggerLink.setTriggerId(triggerId);
-        triggerLinkService.save(tesseractExecutorTriggerLink);
-    }
-
-    /**
-     * 注册主机
-     *
-     * @param socket
-     */
-    private TesseractExecutor registryExecutor(String socket) {
-        QueryWrapper<TesseractExecutor> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(TesseractExecutor::getSocket, socket);
-        TesseractExecutor executor = getOne(queryWrapper);
-        if (executor != null) {
-            log.warn("执行器{}已存在，将忽略注册", executor);
-            return executor;
-        }
-        executor = new TesseractExecutor();
-        executor.setCreateTime(System.currentTimeMillis());
-        executor.setName("default");
-        executor.setSocket(socket);
-        executor.setUpdateTime(System.currentTimeMillis());
-        this.save(executor);
-        return executor;
+        long currentTimeMillis = System.currentTimeMillis();
+        executorDetail = new TesseractExecutorDetail();
+        executorDetail.setExecutorId(executorId);
+        executorDetail.setSocket(socket);
+        executorDetail.setUpdateTime(currentTimeMillis);
+        executorDetail.setCreateTime(currentTimeMillis);
+        executorDetailService.save(executorDetail);
     }
 }
