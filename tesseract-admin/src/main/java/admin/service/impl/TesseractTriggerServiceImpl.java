@@ -70,12 +70,10 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
                     e.printStackTrace();
                 }
                 long currentTimeMillis = System.currentTimeMillis();
-                Date date = new Date();
-                date.setTime(currentTimeMillis);
-                trigger.setNextTriggerTime(cronExpression.getTimeAfter(date).getTime());
+                trigger.setNextTriggerTime(cronExpression.getTimeAfter(new Date()).getTime());
                 trigger.setPrevTriggerTime(currentTimeMillis);
             });
-            log.error("下一次执行时间:{}", new Date(triggerList.get(0).getNextTriggerTime()));
+            log.info("下一次执行时间:{}", new Date(triggerList.get(0).getNextTriggerTime()));
             this.updateBatchById(triggerList);
         }
         return triggerList;
@@ -87,10 +85,8 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
     public void saveTrigger(TesseractTrigger tesseractTrigger) throws Exception {
         CronExpression cronExpression = new CronExpression(tesseractTrigger.getCron());
         long currentTimeMillis = System.currentTimeMillis();
-        Date date = new Date();
-        date.setTime(currentTimeMillis);
         tesseractTrigger.setPrevTriggerTime(0L);
-        tesseractTrigger.setNextTriggerTime(cronExpression.getTimeAfter(date).getTime());
+        tesseractTrigger.setNextTriggerTime(cronExpression.getTimeAfter(new Date()).getTime());
         tesseractTrigger.setCreateTime(currentTimeMillis);
         tesseractTrigger.setStatus(TRGGER_STATUS_STOPING);
         tesseractTrigger.setUpdateTime(currentTimeMillis);
@@ -122,8 +118,10 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
     }
 
     @Override
-    public void startTrigger(Integer triggerId) {
+    public void startTrigger(Integer triggerId) throws ParseException {
         TesseractTrigger trigger = getTriggerById(triggerId);
+        CronExpression cronExpression = new CronExpression(trigger.getCron());
+        trigger.setNextTriggerTime(cronExpression.getTimeAfter(new Date()).getTime());
         trigger.setStatus(TRGGER_STATUS_STARTING);
         updateById(trigger);
     }

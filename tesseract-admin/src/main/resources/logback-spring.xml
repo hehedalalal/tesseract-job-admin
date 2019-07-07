@@ -173,11 +173,11 @@
     -->
 
     <!--开发环境:打印控制台-->
-<!--    <springProfile name="dev">-->
+    <!--    <springProfile name="dev">-->
     <!--        <logger name="com.nmys.view" level="debug"/>-->
     <!--    </springProfile>-->
 
-    <root level="error">
+    <root level="info">
         <appender-ref ref="CONSOLE"/>
     </root>
 

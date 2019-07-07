@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.text.ParseException;
 
 /**
  * <p>
@@ -51,7 +52,7 @@ public class TesseractTriggerController {
     }
 
     @RequestMapping("/start")
-    public CommonResponseVO start(@NotNull Integer triggerId) {
+    public CommonResponseVO start(@NotNull Integer triggerId) throws ParseException {
         triggerService.startTrigger(triggerId);
         return CommonResponseVO.SUCCESS;
     }

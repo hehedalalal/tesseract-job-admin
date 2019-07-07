@@ -68,11 +68,9 @@ public class TesseractScheduler implements InitializingBean, DisposableBean {
                     }
                 }
                 int blockGetAvailableThreadNum = tesseractTriggerDispatcher.blockGetAvailableThreadNum();
-                log.error("可用线程数:{}", blockGetAvailableThreadNum);
+                log.info("可用线程数:{}", blockGetAvailableThreadNum);
                 List<TesseractTrigger> triggerList = tesseractTriggerService.findTriggerWithLock(blockGetAvailableThreadNum, System.currentTimeMillis(), timeWindowSize);
-                log.error("扫描触发器数量:{}", triggerList.size());
-                atomicInteger.addAndGet(triggerList.size());
-                log.info("schedulerThread扫描到触发器：{}", triggerList);
+                log.info("扫描触发器数量:{}", triggerList.size());
                 if (!CollectionUtils.isEmpty(triggerList)) {
                     //降序排序等待时间差
                     TesseractTrigger tesseractTrigger = triggerList.get(0);

@@ -129,7 +129,7 @@ insert into tesseract_user(name, password, status, create_time, update_time)
 values ('admin', '21232F297A57A5A743894A0E4A801FC3', 0, 1562336661000, 1562336661000);
 insert into tesseract_trigger( name, next_trigger_time, prev_trigger_time, cron, strategy, sharding_num, retry_count
                              , status, creator, description, executor_id, create_time, update_time)
-values ('testTrigger', 1562336661000, 0, '*/5 * * * * ?', 0, 0, 0, 1, 'admin', 'test', 1, 1562336661000, 1562336661000);
+values ('testTrigger', 1562512500000, 0, '*/5 * * * * ?', 0, 0, 0, 1, 'admin', 'test', 1, 1562512500000, 1562512500000);
 
 
 
@@ -147,16 +147,16 @@ BEGIN
     insert into tesseract_trigger(id, name, next_trigger_time, prev_trigger_time, cron,
                                   strategy, sharding_num, retry_count, status, creator, description, executor_id,
                                   executor_name, create_time, update_time)
-    values (var, concat('testTrigger-', var), 1562479500000, 0, '* */5 * * * ?', 0, 0, 0, 1, 'admin', 'test', 1,
+    values (var, concat('testTrigger-', var), 1562512500000, 0, '0 0/5 * * * ?', 0, 0, 0, 1, 'admin', 'test', 1,
             'testExecutor',
-            1562479500000, 1562479500000);
+            1562512500000, 1562512500000);
 
     insert into tesseract_job_detail(trigger_id, class_name, create_time, creator)
-    values (var, 'tesseract.sample.TestJob', 1562479500000, 'admin');
+    values (var, 'tesseract.sample.TestJob', 1562512500000, 'admin');
     SET var = var + 1;
     END WHILE;
     commit;
 END
 //
 DELIMITER ;
-call insert_trigger(10000);
+call insert_trigger(50000);

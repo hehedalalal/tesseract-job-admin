@@ -2,7 +2,6 @@ package nickle.tesseract;
 
 import admin.core.scheduler.CronExpression;
 import org.junit.Test;
-import org.quartz.impl.triggers.CronTriggerImpl;
 
 import java.util.Date;
 
@@ -19,10 +18,6 @@ public class GeneralTest {
     public void testCronExpression() throws Exception {
         CronExpression cronExpression = new CronExpression("0 0/5 * * * ?");
         System.out.println(cronExpression.getNextValidTimeAfter(new Date()));
-
-
-        CronTriggerImpl cronTrigger = new CronTriggerImpl("name", "group", "0 0/5 * * * ?");
-        System.out.println(cronTrigger.computeFirstFireTime(null));
 
     }
 }

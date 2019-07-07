@@ -5,6 +5,7 @@ import admin.pojo.TriggerVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.text.ParseException;
 import java.util.List;
 
 /**
@@ -22,7 +23,7 @@ public interface ITesseractTriggerService extends IService<TesseractTrigger> {
 
     void executeTrigger(Integer triggerId);
 
-    void startTrigger(Integer triggerId);
+    void startTrigger(Integer triggerId) throws ParseException;
 
     void stopTrigger(Integer triggerId);
 
