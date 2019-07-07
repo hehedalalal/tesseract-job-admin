@@ -23,7 +23,6 @@ public class TesseractScheduler implements InitializingBean, DisposableBean {
     @Autowired
     private TesseractTriggerDispatcher tesseractTriggerDispatcher;
 
-    private ISchedulerThreadPool threadPool = new DefaultSchedulerThreadPool(250);
 
     private int maxBatchSize = 250;
     private int timeWindowSize = 0;
@@ -37,6 +36,8 @@ public class TesseractScheduler implements InitializingBean, DisposableBean {
     public void destroy() {
         isStop = true;
         schedulerThread.interrupt();
+        //停止dispatcher
+        tesseractTriggerDispatcher.stop();
     }
 
     @EventListener(ContextRefreshedEvent.class)
@@ -66,7 +67,7 @@ public class TesseractScheduler implements InitializingBean, DisposableBean {
                     } catch (InterruptedException e) {
                     }
                 }
-                int blockGetAvailableThreadNum = threadPool.blockGetAvailableThreadNum();
+                int blockGetAvailableThreadNum = tesseractTriggerDispatcher.blockGetAvailableThreadNum();
                 log.error("可用线程数:{}", blockGetAvailableThreadNum);
                 List<TesseractTrigger> triggerList = tesseractTriggerService.findTriggerWithLock(blockGetAvailableThreadNum, System.currentTimeMillis(), timeWindowSize);
                 log.error("扫描触发器数量:{}", triggerList.size());
@@ -87,9 +88,7 @@ public class TesseractScheduler implements InitializingBean, DisposableBean {
                             }
                         }
                     }
-                    threadPool.runJob(() -> {
-                        tesseractTriggerDispatcher.dispatchTrigger(triggerList, false);
-                    });
+                    tesseractTriggerDispatcher.dispatchTrigger(triggerList, false);
                     continue;
                 }
                 log.error(atomicInteger.toString());

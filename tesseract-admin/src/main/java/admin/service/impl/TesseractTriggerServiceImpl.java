@@ -43,7 +43,14 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
     @Autowired
     private TesseractTriggerDispatcher triggerDispatcher;
 
-
+    /**
+     * 获取锁并获取到时间点之前的触发器
+     *
+     * @param batchSize
+     * @param time
+     * @param timeWindowSize
+     * @return
+     */
     @Override
     public List<TesseractTrigger> findTriggerWithLock(int batchSize, long time, Integer timeWindowSize) {
         lockService.lock(TRIGGER_LOCK_NAME);
@@ -53,10 +60,9 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
         Page<TesseractTrigger> page = new Page<>(1, batchSize);
         IPage<TesseractTrigger> listPage = page(page, queryWrapper);
         List<TesseractTrigger> triggerList = listPage.getRecords();
-        Date dateTmp = new Date();
-        dateTmp.setTime(time + timeWindowSize);
         if (!CollectionUtils.isEmpty(triggerList)) {
             triggerList.parallelStream().forEach(trigger -> {
+                //构建cron计算器
                 CronExpression cronExpression = null;
                 try {
                     cronExpression = new CronExpression(trigger.getCron());
@@ -69,6 +75,7 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
                 trigger.setNextTriggerTime(cronExpression.getTimeAfter(date).getTime());
                 trigger.setPrevTriggerTime(currentTimeMillis);
             });
+            log.error("下一次执行时间:{}", new Date(triggerList.get(0).getNextTriggerTime()));
             this.updateBatchById(triggerList);
         }
         return triggerList;

@@ -1,6 +1,8 @@
 package admin.core.scheduler;
 
 import admin.constant.AdminConstant;
+import admin.core.scheduler.pool.DefaultSchedulerThreadPool;
+import admin.core.scheduler.pool.ISchedulerThreadPool;
 import admin.core.scheduler.router.impl.HashRouter;
 import admin.entity.*;
 import admin.service.*;
@@ -8,6 +10,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import feignService.IAdminFeignService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import tesseract.core.dto.TesseractExecutorRequest;
@@ -26,7 +29,7 @@ import static tesseract.core.constant.CommonConstant.EXECUTE_MAPPING;
 import static tesseract.core.constant.CommonConstant.HTTP_PREFIX;
 
 @Slf4j
-public class TesseractTriggerDispatcher implements DisposableBean {
+public class TesseractTriggerDispatcher implements InitializingBean {
     @Autowired
     private ITesseractJobDetailService tesseractJobDetailService;
     @Autowired
@@ -39,25 +42,35 @@ public class TesseractTriggerDispatcher implements DisposableBean {
     private ITesseractFiredTriggerService firedTriggerService;
     @Autowired
     private IAdminFeignService feignService;
+    private ISchedulerThreadPool threadPool = new DefaultSchedulerThreadPool(500);
 
-
-    private final String THREAD_NAME_FORMATTER = "TesseractSchedulerThread-%d";
-    private final AtomicInteger ATOMIC_INTEGER = new AtomicInteger(0);
-    private final ThreadPoolExecutor THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(10,
-            100, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(500)
-            , r -> {
-        Thread thread = new Thread(r, String.format(THREAD_NAME_FORMATTER, ATOMIC_INTEGER.getAndIncrement()));
-        thread.setDaemon(true);
-        return thread;
-    }, (r, executor) ->
-
-    {
-        log.error("任务数过多，调度线程将阻塞，任务可能无法调度，检查网络设置");
-        r.run();
-    });
+//    private final String THREAD_NAME_FORMATTER = "TesseractSchedulerThread-%d";
+//    private final AtomicInteger ATOMIC_INTEGER = new AtomicInteger(0);
+//    private final ThreadPoolExecutor THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(10,
+//            100, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(500)
+//            , r -> {
+//        Thread thread = new Thread(r, String.format(THREAD_NAME_FORMATTER, ATOMIC_INTEGER.getAndIncrement()));
+//        thread.setDaemon(true);
+//        return thread;
+//    }, (r, executor) ->
+//
+//    {
+//        log.error("任务数过多，调度线程将阻塞，任务可能无法调度，检查网络设置");
+//        r.run();
+//    });
 
     public void dispatchTrigger(List<TesseractTrigger> triggerList, boolean isOnce) {
-        triggerList.stream().forEach(trigger -> THREAD_POOL_EXECUTOR.execute(new TaskRunnable(trigger, isOnce)));
+        //triggerList.stream().forEach(trigger -> THREAD_POOL_EXECUTOR.execute(new TaskRunnable(trigger, isOnce)));
+        triggerList.stream().forEach(trigger -> threadPool.runJob(new TaskRunnable(trigger, isOnce)));
+    }
+
+    public int blockGetAvailableThreadNum() {
+        return threadPool.blockGetAvailableThreadNum();
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        threadPool.init();
     }
 
     private class TaskRunnable implements Runnable {
@@ -179,8 +192,9 @@ public class TesseractTriggerDispatcher implements DisposableBean {
 
     }
 
-    public void destroy() throws InterruptedException {
-        THREAD_POOL_EXECUTOR.shutdownNow();
-        THREAD_POOL_EXECUTOR.awaitTermination(1, TimeUnit.DAYS);
+    public void stop() {
+//        THREAD_POOL_EXECUTOR.shutdownNow();
+//        THREAD_POOL_EXECUTOR.awaitTermination(1, TimeUnit.DAYS);
+        threadPool.shutdown();
     }
 }

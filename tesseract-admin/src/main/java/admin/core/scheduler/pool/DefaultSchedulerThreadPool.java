@@ -19,6 +19,7 @@ public class DefaultSchedulerThreadPool implements ISchedulerThreadPool {
     private final int threadNum;
     private final AtomicInteger atomicInteger = new AtomicInteger(0);
     private final Object lock = new Object();
+    private volatile boolean isStop = false;
 
     public DefaultSchedulerThreadPool(int threadNum) {
         this.threadNum = threadNum;
@@ -29,6 +30,10 @@ public class DefaultSchedulerThreadPool implements ISchedulerThreadPool {
 
     @Override
     public int blockGetAvailableThreadNum() {
+        if (isStop) {
+            log.error("线程池已关闭");
+            return 0;
+        }
         int count;
         synchronized (lock) {
             while (busyWorkerList.size() == threadNum) {
@@ -44,6 +49,10 @@ public class DefaultSchedulerThreadPool implements ISchedulerThreadPool {
 
     @Override
     public void runJob(Runnable runnable) {
+        if (isStop) {
+            log.error("线程池已关闭");
+            return;
+        }
         synchronized (lock) {
             //确保没有超出可用线程
             while (busyWorkerList.size() == threadNum) {
@@ -66,7 +75,9 @@ public class DefaultSchedulerThreadPool implements ISchedulerThreadPool {
 
     @Override
     public void shutdown() {
-
+        this.isStop = true;
+        availableWorkerList.forEach(workerThread -> workerThread.stopThread());
+        busyWorkerList.forEach(workerThread -> workerThread.stopThread());
     }
 
     @Override
@@ -81,6 +92,7 @@ public class DefaultSchedulerThreadPool implements ISchedulerThreadPool {
         private List<WorkerThread> busyWorkerList;
 
         public WorkerThread(List<WorkerThread> availableWorkerList, List<WorkerThread> busyWorkerList) {
+            super(String.format("tesseract-work-thread-%d", atomicInteger.incrementAndGet()));
             this.availableWorkerList = availableWorkerList;
             this.busyWorkerList = busyWorkerList;
         }
@@ -90,6 +102,7 @@ public class DefaultSchedulerThreadPool implements ISchedulerThreadPool {
         }
 
         public void stopThread() {
+            log.info("work thread stop");
             this.stop = true;
         }
 
