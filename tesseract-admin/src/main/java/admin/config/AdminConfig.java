@@ -29,7 +29,7 @@ public class AdminConfig {
      *
      * @return
      */
-    @Bean
+    @Bean(initMethod = "init", destroyMethod = "destroy")
     public TesseractScheduler tesseractScheduler() {
         return new TesseractScheduler();
     }
@@ -39,7 +39,7 @@ public class AdminConfig {
      *
      * @return
      */
-    @Bean
+    @Bean(initMethod = "init")
     public TesseractTriggerDispatcher tesseractTriggerDispatcher() {
         return new TesseractTriggerDispatcher();
     }

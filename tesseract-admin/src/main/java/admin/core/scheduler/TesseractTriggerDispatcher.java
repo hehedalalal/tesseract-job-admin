@@ -9,8 +9,6 @@ import admin.service.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import feignService.IAdminFeignService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import tesseract.core.dto.TesseractExecutorRequest;
@@ -19,17 +17,13 @@ import tesseract.core.dto.TesseractExecutorResponse;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static admin.constant.AdminConstant.*;
 import static tesseract.core.constant.CommonConstant.EXECUTE_MAPPING;
 import static tesseract.core.constant.CommonConstant.HTTP_PREFIX;
 
 @Slf4j
-public class TesseractTriggerDispatcher implements InitializingBean {
+public class TesseractTriggerDispatcher {
     @Autowired
     private ITesseractJobDetailService tesseractJobDetailService;
     @Autowired
@@ -68,8 +62,7 @@ public class TesseractTriggerDispatcher implements InitializingBean {
         return threadPool.blockGetAvailableThreadNum();
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
+    public void init() {
         threadPool.init();
     }
 

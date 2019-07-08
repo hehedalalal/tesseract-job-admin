@@ -29,7 +29,7 @@ public class ExecutorConfig {
         return new ExecutorController();
     }
 
-    @Bean
+    @Bean(initMethod = "init", destroyMethod = "destroy")
     public TesseractExecutor tesseractExecutor() {
         return new TesseractExecutor();
     }

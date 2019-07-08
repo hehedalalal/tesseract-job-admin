@@ -70,15 +70,6 @@ create table tesseract_executor_detail
 
 
 
-# create table tesseract_executor_trigger_link
-# (
-#     id          int unsigned primary key auto_increment,
-#     trigger_id  int unsigned not null,
-#     executor_id int unsigned not null,
-#     unique (trigger_id, executor_id)
-# ) engine = InnoDB
-#   default charset = utf8;
-
 
 create table tesseract_lock
 (
@@ -128,9 +119,9 @@ create table tesseract_log
 insert into tesseract_user(name, password, status, create_time, update_time)
 values ('admin', '21232F297A57A5A743894A0E4A801FC3', 0, 1562336661000, 1562336661000);
 insert into tesseract_trigger( name, next_trigger_time, prev_trigger_time, cron, strategy, sharding_num, retry_count
-                             , status, creator, description, executor_id, create_time, update_time)
-values ('testTrigger', 1562512500000, 0, '*/5 * * * * ?', 0, 0, 0, 1, 'admin', 'test', 1, 1562512500000, 1562512500000);
-
+                             , status, creator, description, executor_id, executor_name, create_time, update_time)
+values ('testTrigger', 1562512500000, 0, '*/5 * * * * ?', 0, 0, 0, 0, 'admin', 'test', 1, 'testExecutor',1562512500000, 1562512500000);
+insert into tesseract_executor(name, creator, description, create_time) values ('testExecutor','admin','test',1562512500000);
 
 
 truncate table tesseract_job_detail;
