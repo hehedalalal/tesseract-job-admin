@@ -20,4 +20,15 @@
         id, trigger_name, class_name, socket, status, msg, creator, create_time, end_time
     </sql>
 
+    <select id="statisticsFailLog" resultType="int">
+        select count(*) from tesseract_log where status=0 and (create_time between #{startTime} and #{endTime} )
+        group by
+        from_unixtime(create_time/1000,'%Y-%m-%d') order by create_time
+    </select>
+
+    <select id="statisticsSuccessLog" resultType="int">
+        select count(*) from tesseract_log where status=1 and (create_time between #{startTime} and #{endTime} )
+        group by
+        from_unixtime(create_time/1000,'%Y-%m-%d') order by create_time
+    </select>
 </mapper>

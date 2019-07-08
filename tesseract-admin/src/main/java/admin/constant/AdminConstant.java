@@ -17,6 +17,7 @@ public class AdminConstant {
      * 日志相关
      */
     public static final String NULL_SOCKET = "";
+    public static final Integer LOG_NO_CONFIRM = 3;
     public static final Integer LOG_WAIT = 2;
     public static final Integer LOG_SUCCESS = 1;
     public static final Integer LOG_FAIL = 0;

@@ -1,11 +1,12 @@
 package admin.service;
 
 import admin.entity.TesseractLog;
-import admin.entity.TesseractUser;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import tesseract.core.dto.TesseractAdminJobNotify;
-import tesseract.core.dto.TesseractExecutorResponse;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -19,4 +20,6 @@ public interface ITesseractLogService extends IService<TesseractLog> {
     void notify(TesseractAdminJobNotify tesseractAdminJobNotify);
 
     IPage<TesseractLog> listByPage(Integer currentPage, Integer pageSize, TesseractLog condition);
+
+    Map<String, List<Integer>> statisticsLog();
 }

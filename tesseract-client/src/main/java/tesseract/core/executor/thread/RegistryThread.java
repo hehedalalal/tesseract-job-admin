@@ -70,6 +70,13 @@ public class RegistryThread extends Thread implements IThreadLifycycle {
                 //注册
                 registry();
             }
+            if (!isRegistry) {
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                }
+                continue;
+            }
             try {
                 //注册成功后开始睡觉
                 synchronized (this) {

@@ -41,8 +41,9 @@ create table tesseract_fired_trigger
     class_name  varchar(255) not null,
     name        varchar(30)  not null,
     socket      varchar(255) not null,
-    executor_id int unsigned not null,
-    create_time bigint       not null
+    executor_detail_id int unsigned not null,
+    create_time bigint       not null,
+    log_id      int unsigned not null
 ) engine = InnoDB
   default charset = utf8;
 
@@ -112,7 +113,8 @@ create table tesseract_log
     msg          text         not null,
     creator      varchar(255) not null,
     create_time  bigint       not null,
-    end_time     bigint       not null
+    end_time     bigint       not null,
+    index(create_time)
 ) engine = InnoDB
   default charset = utf8;
 

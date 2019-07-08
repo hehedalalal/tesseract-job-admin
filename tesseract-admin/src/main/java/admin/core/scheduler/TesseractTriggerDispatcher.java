@@ -149,8 +149,9 @@ public class TesseractTriggerDispatcher {
             tesseractFiredTrigger.setName(trigger.getName());
             tesseractFiredTrigger.setTriggerId(trigger.getId());
             tesseractFiredTrigger.setClassName(jobDetail.getClassName());
-            tesseractFiredTrigger.setExecutorId(executorDetail.getExecutorId());
+            tesseractFiredTrigger.setExecutorDetailId(executorDetail.getId());
             tesseractFiredTrigger.setSocket(executorDetail.getSocket());
+            tesseractFiredTrigger.setLogId(tesseractLog.getId());
             firedTriggerService.save(tesseractFiredTrigger);
             //构建请求
             TesseractExecutorRequest executorRequest = new TesseractExecutorRequest();
