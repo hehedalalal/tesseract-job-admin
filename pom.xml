@@ -16,9 +16,9 @@
     </parent>
     <packaging>pom</packaging>
     <groupId>com.nickle</groupId>
-    <artifactId>tesseract</artifactId>
+    <artifactId>tesseract-job</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>tesseract</name>
+    <name>tesseract-job</name>
     <description>任务魔方</description>
 
     <properties>
