@@ -2,15 +2,20 @@ package admin.mapper;
 
 import admin.entity.TesseractLog;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * <p>
- *  Mapper 接口
+ * Mapper 接口
  * </p>
  *
  * @author nickle
  * @since 2019-07-03
  */
 public interface TesseractLogMapper extends BaseMapper<TesseractLog> {
+    List<Integer> statisticsFailLog(@Param("startTime") long startTime, @Param("endTime") long endTime);
 
+    List<Integer> statisticsSuccessLog(@Param("startTime") long startTime, @Param("endTime") long endTime);
 }

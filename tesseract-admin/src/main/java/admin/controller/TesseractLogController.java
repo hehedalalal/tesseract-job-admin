@@ -2,18 +2,15 @@ package admin.controller;
 
 
 import admin.entity.TesseractLog;
-import admin.entity.TesseractUser;
 import admin.pojo.CommonResponseVO;
 import admin.pojo.LogVO;
 import admin.pojo.PageVO;
-import admin.pojo.UserVO;
 import admin.service.ITesseractLogService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-
 import org.springframework.web.bind.annotation.RestController;
 import tesseract.core.dto.TesseractAdminJobNotify;
 import tesseract.core.dto.TesseractExecutorResponse;
@@ -64,4 +61,13 @@ public class TesseractLogController {
         return CommonResponseVO.success(logService.count());
     }
 
+    /**
+     * 统计最近七天的数据
+     *
+     * @return
+     */
+    @RequestMapping("/statisticsLog")
+    private CommonResponseVO statisticsLog() {
+        return CommonResponseVO.success(logService.statisticsLog());
+    }
 }
