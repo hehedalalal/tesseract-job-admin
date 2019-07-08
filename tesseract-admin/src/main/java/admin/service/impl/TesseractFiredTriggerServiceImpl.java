@@ -26,9 +26,9 @@ public class TesseractFiredTriggerServiceImpl extends ServiceImpl<TesseractFired
 
     @Transactional
     @Override
-    public void removeFiredTriggerAndUpdateLog(Integer triggerId, Integer executorId, TesseractLog tesseractLog) {
+    public void removeFiredTriggerAndUpdateLog(Integer triggerId, Integer executorDetailId, TesseractLog tesseractLog) {
         QueryWrapper<TesseractFiredTrigger> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(TesseractFiredTrigger::getTriggerId, triggerId).eq(TesseractFiredTrigger::getExecutorId, executorId);
+        queryWrapper.lambda().eq(TesseractFiredTrigger::getTriggerId, triggerId).eq(TesseractFiredTrigger::getExecutorDetailId, executorDetailId);
         this.remove(queryWrapper);
         logService.updateById(tesseractLog);
     }
