@@ -19,5 +19,7 @@ public interface TesseractLogMapper extends BaseMapper<TesseractLog> {
 
     List<StatisticsLogDO> statisticsFailLog(@Param("startTime") long startTime, @Param("endTime") long endTime);
 
-    List<StatisticsLogDO> statisticsSuccessLog(@Param("startTime") long startTime, @Param("endTime") long endTime);
+    List<StatisticsLogDO> statisticsSuccessLogLine(@Param("startTime") long startTime, @Param("endTime") long endTime);
+
+    List<StatisticsLogDO> statisticsSuccessLogPie();
 }

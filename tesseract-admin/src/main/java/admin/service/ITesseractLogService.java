@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import tesseract.core.dto.TesseractAdminJobNotify;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,5 +22,7 @@ public interface ITesseractLogService extends IService<TesseractLog> {
 
     IPage<TesseractLog> listByPage(Integer currentPage, Integer pageSize, TesseractLog condition);
 
-    Map<String, Collection<Integer>> statisticsLog();
+    Map<String, Collection<Integer>> statisticsLogLine();
+
+    List<Map<String, Object>> statisticsLogPie();
 }

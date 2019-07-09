@@ -62,12 +62,23 @@ public class TesseractLogController {
     }
 
     /**
-     * 统计最近七天的数据
+     * 统计最近七天的数据，线形图
      *
      * @return
      */
-    @RequestMapping("/statisticsLog")
-    private CommonResponseVO statisticsLog() {
-        return CommonResponseVO.success(logService.statisticsLog());
+    @RequestMapping("/statisticsLogLine")
+    private CommonResponseVO statisticsLogLine() {
+        return CommonResponseVO.success(logService.statisticsLogLine());
     }
+
+    /**
+     * 统计饼图
+     *
+     * @return
+     */
+    @RequestMapping("/statisticsLogPie")
+    private CommonResponseVO statisticsLogPie() {
+        return CommonResponseVO.success(logService.statisticsLogPie());
+    }
+
 }

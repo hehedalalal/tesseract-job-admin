@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +25,7 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static admin.constant.AdminConstant.LOG_FAIL;
 import static admin.constant.AdminConstant.LOG_SUCCESS;
@@ -82,7 +80,7 @@ public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, Tes
     }
 
     @Override
-    public Map<String, Collection<Integer>> statisticsLog() {
+    public Map<String, Collection<Integer>> statisticsLogLine() {
         LocalDate now = LocalDate.now();
         long startTime = now.minus(6, ChronoUnit.DAYS).atStartOfDay().toInstant(ZoneOffset.of("+8")).toEpochMilli();
         long endTime = now.plus(1, ChronoUnit.DAYS).atStartOfDay().toInstant(ZoneOffset.of("+8")).toEpochMilli();
@@ -92,7 +90,7 @@ public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, Tes
         startDate.setTime(endTime);
         log.info("startTime:{},endTime:{}", startDate, endDate);
         List<StatisticsLogDO> failStatisticsLogDOList = this.getBaseMapper().statisticsFailLog(startTime, endTime);
-        List<StatisticsLogDO> successStatisticsLogDOList = this.getBaseMapper().statisticsSuccessLog(startTime, endTime);
+        List<StatisticsLogDO> successStatisticsLogDOList = this.getBaseMapper().statisticsSuccessLogLine(startTime, endTime);
         Map<String, Collection<Integer>> map = Maps.newHashMap();
         Collection<Integer> failCountList = AdminUtils.buildStatisticsList(failStatisticsLogDOList, statisticsDays);
         Collection<Integer> successCountList = AdminUtils.buildStatisticsList(successStatisticsLogDOList, statisticsDays);
@@ -101,4 +99,16 @@ public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, Tes
         return map;
     }
 
+    @Override
+    public List<Map<String, Object>> statisticsLogPie() {
+        List<Map<String, Object>> list = Lists.newArrayList();
+        List<StatisticsLogDO> statisticsLogDOList = this.getBaseMapper().statisticsSuccessLogPie();
+        statisticsLogDOList.forEach(statisticsLogDO -> {
+            HashMap<String, Object> hashMap = Maps.newHashMap();
+            hashMap.put("name", statisticsLogDO.getDataStr());
+            hashMap.put("value", statisticsLogDO.getNum());
+            list.add(hashMap);
+        });
+        return list;
+    }
 }
