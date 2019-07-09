@@ -32,7 +32,6 @@ import java.util.HashMap;
  */
 @RestController
 @RequestMapping("/tesseract-user")
-@Validated
 public class TesseractUserController {
     @Autowired
     private ITesseractUserService tesseractUserService;
@@ -90,6 +89,21 @@ public class TesseractUserController {
     public CommonResponseVO invalidUser(@NotNull String userId) throws Exception {
         tesseractUserService.invalidUser(userId);
         return CommonResponseVO.SUCCESS;
+    }
+
+    @RequestMapping("/getUserCount")
+    private CommonResponseVO getUserCount() {
+        return CommonResponseVO.success(tesseractUserService.count());
+    }
+
+    /**
+     * 统计最近七天的数据
+     *
+     * @return
+     */
+    @RequestMapping("/statisticsUser")
+    private CommonResponseVO statisticsUser() {
+        return CommonResponseVO.success(tesseractUserService.statisticsUser());
     }
 }
 

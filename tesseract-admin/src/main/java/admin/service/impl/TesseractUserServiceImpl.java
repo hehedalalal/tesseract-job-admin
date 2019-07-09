@@ -1,25 +1,31 @@
 package admin.service.impl;
 
 import admin.entity.TesseractToken;
-import admin.entity.TesseractTrigger;
 import admin.entity.TesseractUser;
 import admin.mapper.TesseractUserMapper;
+import admin.pojo.StatisticsLogDO;
 import admin.pojo.UserDO;
 import admin.service.ITesseractTokenService;
 import admin.service.ITesseractUserService;
+import admin.util.AdminUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 import tesseract.exception.TesseractException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 import static admin.constant.AdminConstant.USER_INVALID;
@@ -34,16 +40,18 @@ import static admin.constant.AdminConstant.USER_VALID;
  * @since 2019-07-03
  */
 @Service
+@Slf4j
 public class TesseractUserServiceImpl extends ServiceImpl<TesseractUserMapper, TesseractUser> implements ITesseractUserService {
     private static final String TOKEN_FORMATTER = "tessseract-%s-%s";
     /**
-     * token过期时间，默认一天
+     * token过期时间，默认2小时
      */
-    private static final Integer TOKEN_EXPIRE_TIME = 24 * 60;
+    private static final Integer TOKEN_EXPIRE_TIME = 2 * 60;
     @Autowired
     private ITesseractTokenService tokenService;
     private String defaultPassword = "666666";
     private String defaultPasswordMD5 = DigestUtils.md5DigestAsHex(defaultPassword.getBytes());
+    private int statisticsDays = 7;
 
     @Override
     public String userLogin(UserDO userDO) {
@@ -56,15 +64,22 @@ public class TesseractUserServiceImpl extends ServiceImpl<TesseractUserMapper, T
         }
         LocalDateTime nowLocalDateTime = LocalDateTime.now();
         long nowTime = nowLocalDateTime.toInstant(ZoneOffset.of("+8")).toEpochMilli();
-        long expireTime = nowLocalDateTime.plusMinutes(TOKEN_EXPIRE_TIME).toInstant(ZoneOffset.of("+8")).toEpochMilli();
         QueryWrapper<TesseractToken> tesseractTokenQueryWrapper = new QueryWrapper<>();
+        tesseractTokenQueryWrapper.lambda().eq(TesseractToken::getUserId, user.getId());
         TesseractToken tesseractToken = tokenService.getOne(tesseractTokenQueryWrapper);
         //如果token已存在
         if (tesseractToken != null) {
-            tesseractToken.setUpdateTime(nowTime);
-            tesseractToken.setExpireTime(expireTime);
+            //检测是否过期
+            Long expireTime = tesseractToken.getExpireTime();
+            if (nowTime < expireTime) {
+                tesseractToken.setToken(generateToken(user));
+                tesseractToken.setUpdateTime(nowTime);
+                tokenService.updateById(tesseractToken);
+            }
             return tesseractToken.getToken();
         }
+        //创建新的token
+        long expireTime = nowLocalDateTime.plusMinutes(TOKEN_EXPIRE_TIME).toInstant(ZoneOffset.of("+8")).toEpochMilli();
         String token = generateToken(user);
         tesseractToken = new TesseractToken();
         tesseractToken.setCreateTime(nowTime);
@@ -112,7 +127,7 @@ public class TesseractUserServiceImpl extends ServiceImpl<TesseractUserMapper, T
         if (user == null) {
             throw new TesseractException("用户不存在");
         }
-        if (user.getStatus() == USER_VALID) {
+        if (user.getStatus().equals(USER_VALID)) {
             throw new TesseractException("用户已经是激活状态");
         }
         user.setStatus(USER_VALID);
@@ -126,11 +141,20 @@ public class TesseractUserServiceImpl extends ServiceImpl<TesseractUserMapper, T
         if (user == null) {
             throw new TesseractException("用户不存在");
         }
-        if (user.getStatus() == USER_INVALID) {
+        if (user.getStatus().equals(USER_INVALID)) {
             throw new TesseractException("用户已经是禁用状态");
         }
         user.setStatus(USER_INVALID);
         updateById(user);
+    }
+
+    @Override
+    public Collection<Integer> statisticsUser() {
+        LocalDate now = LocalDate.now();
+        long startTime = now.minus(6, ChronoUnit.DAYS).atStartOfDay().toInstant(ZoneOffset.of("+8")).toEpochMilli();
+        long endTime = now.plus(1, ChronoUnit.DAYS).atStartOfDay().toInstant(ZoneOffset.of("+8")).toEpochMilli();
+        List<StatisticsLogDO> statisticsLogDOList = tokenService.statisticsActiveUser(startTime, endTime);
+        return AdminUtils.buildStatisticsList(statisticsLogDOList, statisticsDays);
     }
 
     private String generateToken(TesseractUser user) {

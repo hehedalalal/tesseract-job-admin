@@ -1,12 +1,11 @@
 package admin.service;
 
-import admin.entity.TesseractTrigger;
 import admin.entity.TesseractUser;
-import admin.pojo.PageVO;
 import admin.pojo.UserDO;
-import admin.pojo.UserVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.Collection;
 
 /**
  * <p>
@@ -28,4 +27,6 @@ public interface ITesseractUserService extends IService<TesseractUser> {
     void validUser(String userId);
 
     void invalidUser(String userId);
+
+    Collection<Integer> statisticsUser();
 }

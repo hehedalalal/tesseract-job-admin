@@ -2,8 +2,10 @@ package admin.service.impl;
 
 import admin.entity.TesseractLog;
 import admin.mapper.TesseractLogMapper;
+import admin.pojo.StatisticsLogDO;
 import admin.service.ITesseractFiredTriggerService;
 import admin.service.ITesseractLogService;
+import admin.util.AdminUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -22,6 +24,8 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +47,7 @@ public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, Tes
     @Autowired
     private ITesseractFiredTriggerService firedTriggerService;
     private int statisticsDays = 7;
+    private Map<String, Integer> dataMap = Maps.newHashMap();
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -77,28 +82,23 @@ public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, Tes
     }
 
     @Override
-    public Map<String, List<Integer>> statisticsLog() {
+    public Map<String, Collection<Integer>> statisticsLog() {
         LocalDate now = LocalDate.now();
         long startTime = now.minus(6, ChronoUnit.DAYS).atStartOfDay().toInstant(ZoneOffset.of("+8")).toEpochMilli();
         long endTime = now.plus(1, ChronoUnit.DAYS).atStartOfDay().toInstant(ZoneOffset.of("+8")).toEpochMilli();
-        log.info("startTime:{},endTime:{}", startTime, endTime);
-        List<Integer> failCountList = this.getBaseMapper().statisticsFailLog(startTime, endTime);
-        List<Integer> successCountList = this.getBaseMapper().statisticsSuccessLog(startTime, endTime);
-        Map<String, List<Integer>> map = Maps.newHashMap();
-        fillList(failCountList);
-        fillList(successCountList);
+        Date startDate = new Date();
+        startDate.setTime(startTime);
+        Date endDate = new Date();
+        startDate.setTime(endTime);
+        log.info("startTime:{},endTime:{}", startDate, endDate);
+        List<StatisticsLogDO> failStatisticsLogDOList = this.getBaseMapper().statisticsFailLog(startTime, endTime);
+        List<StatisticsLogDO> successStatisticsLogDOList = this.getBaseMapper().statisticsSuccessLog(startTime, endTime);
+        Map<String, Collection<Integer>> map = Maps.newHashMap();
+        Collection<Integer> failCountList = AdminUtils.buildStatisticsList(failStatisticsLogDOList, statisticsDays);
+        Collection<Integer> successCountList = AdminUtils.buildStatisticsList(successStatisticsLogDOList, statisticsDays);
         map.put("success", successCountList);
         map.put("fail", failCountList);
         return map;
     }
 
-    private void fillList(List<Integer> countList) {
-        int size = countList.size();
-        int days = statisticsDays - size;
-        if (days > 0) {
-            for (int i = 0; i < days; i++) {
-                countList.add(i, 0);
-            }
-        }
-    }
 }
