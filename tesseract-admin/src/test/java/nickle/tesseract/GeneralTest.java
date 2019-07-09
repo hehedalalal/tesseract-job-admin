@@ -1,6 +1,8 @@
 package nickle.tesseract;
 
 import admin.core.scheduler.CronExpression;
+import admin.entity.TesseractLog;
+import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 import org.junit.Test;
 
@@ -48,5 +50,12 @@ public class GeneralTest {
             startDate = startDate.plusDays(1);
         }
         System.out.println(linkedHashMap.keySet());
+    }
+
+    @Test
+    public void testFunction() {
+        TesseractLog log = new TesseractLog();
+        Function<TesseractLog, String> getClassName = TesseractLog::getClassName;
+        System.out.println(getClassName.apply(log));
     }
 }

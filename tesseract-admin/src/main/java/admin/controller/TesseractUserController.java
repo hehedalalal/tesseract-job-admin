@@ -61,8 +61,11 @@ public class TesseractUserController {
 
     @RequestMapping("/userList")
     public CommonResponseVO userList(@NotNull @Min(1) Integer currentPage
-            , @NotNull @Min(1) @Max(50) Integer pageSize, TesseractUser condition) {
-        IPage<TesseractUser> userIPage = tesseractUserService.listByPage(currentPage, pageSize, condition);
+            , @NotNull @Min(1) @Max(50) Integer pageSize, TesseractUser condition,
+                                     Long startCreateTime,
+                                     Long endCreateTime) {
+        IPage<TesseractUser> userIPage = tesseractUserService.listByPage(currentPage, pageSize
+                , condition, startCreateTime, endCreateTime);
         UserVO userVO = new UserVO();
         PageVO pageVO = new PageVO();
         pageVO.setCurrentPage(userIPage.getCurrent());

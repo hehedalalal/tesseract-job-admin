@@ -71,11 +71,46 @@ public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, Tes
     }
 
     @Override
-    public IPage<TesseractLog> listByPage(Integer currentPage, Integer pageSize, TesseractLog condition) {
+    public IPage<TesseractLog> listByPage(Integer currentPage, Integer pageSize, TesseractLog condition,
+                                          Long startCreateTime,
+                                          Long endCreateTime,
+                                          Long startUpdateTime,
+                                          Long endUpdateTime) {
         Page<TesseractLog> page = new Page<>(currentPage, pageSize);
         QueryWrapper<TesseractLog> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().orderByDesc(TesseractLog::getCreateTime);
         LambdaQueryWrapper<TesseractLog> lambda = queryWrapper.lambda();
+        //日期
+        if (startCreateTime != null) {
+            lambda.ge(TesseractLog::getCreateTime, startCreateTime);
+        }
+
+        if (endCreateTime != null) {
+            lambda.le(TesseractLog::getCreateTime, endCreateTime);
+        }
+        if (startUpdateTime != null) {
+            lambda.ge(TesseractLog::getStatus, startUpdateTime);
+        }
+        if (endUpdateTime != null) {
+            lambda.le(TesseractLog::getEndTime, endUpdateTime);
+        }
+        //其他
+        if (!StringUtils.isEmpty(condition.getTriggerName())) {
+            lambda.like(TesseractLog::getTriggerName, condition.getTriggerName());
+        }
+        if (!StringUtils.isEmpty(condition.getCreator())) {
+            lambda.like(TesseractLog::getCreator, condition.getCreator());
+        }
+        if (!StringUtils.isEmpty(condition.getMsg())) {
+            lambda.like(TesseractLog::getTriggerName, condition.getTriggerName());
+        }
+        if (!StringUtils.isEmpty(condition.getSocket())) {
+            lambda.like(TesseractLog::getSocket, condition.getSocket());
+        }
+        if (condition.getStatus() != null) {
+            lambda.eq(TesseractLog::getStatus, condition.getStatus());
+        }
+        //按时间倒序
+        lambda.orderByDesc(TesseractLog::getCreateTime);
         return page(page, queryWrapper);
     }
 

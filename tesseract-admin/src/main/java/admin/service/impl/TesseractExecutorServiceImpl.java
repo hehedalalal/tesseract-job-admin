@@ -12,6 +12,7 @@ import admin.service.ITesseractExecutorDetailService;
 import admin.service.ITesseractExecutorService;
 import admin.service.ITesseractJobDetailService;
 import admin.service.ITesseractTriggerService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import tesseract.core.dto.TesseractAdminJobDetailDTO;
 import tesseract.core.dto.TesseractAdminRegistryRequest;
 import tesseract.core.dto.TesseractAdminRegistryResDTO;
@@ -62,10 +64,31 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
     }
 
     @Override
-    public ExecutorVO listByPage(Long currentPage, Long pageSize, TesseractExecutor condition) {
+    public ExecutorVO listByPage(Long currentPage, Long pageSize, TesseractExecutor condition,
+                                 Long startCreateTime,
+                                 Long endCreateTime) {
         ExecutorVO executorVO = new ExecutorVO();
         Page<TesseractExecutor> tesseractExecutorPage = new Page<>(currentPage, pageSize);
-        IPage<TesseractExecutor> page = page(tesseractExecutorPage);
+        QueryWrapper<TesseractExecutor> queryWrapper = new QueryWrapper<>();
+        LambdaQueryWrapper<TesseractExecutor> lambda = queryWrapper.lambda();
+        //日期
+        if (startCreateTime != null) {
+            lambda.ge(TesseractExecutor::getCreateTime, startCreateTime);
+        }
+
+        if (endCreateTime != null) {
+            lambda.le(TesseractExecutor::getCreateTime, endCreateTime);
+        }
+
+        //其他
+        if (!StringUtils.isEmpty(condition.getName())) {
+            lambda.like(TesseractExecutor::getName, condition.getName());
+        }
+        if (!StringUtils.isEmpty(condition.getCreator())) {
+            lambda.like(TesseractExecutor::getCreator, condition.getCreator());
+        }
+
+        IPage<TesseractExecutor> page = page(tesseractExecutorPage, queryWrapper);
         PageVO pageVO = new PageVO();
         pageVO.setCurrentPage(currentPage);
         pageVO.setPageSize(pageSize);

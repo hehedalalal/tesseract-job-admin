@@ -3,10 +3,8 @@ package admin.controller;
 
 import admin.entity.TesseractTrigger;
 import admin.pojo.CommonResponseVO;
-import admin.pojo.PageVO;
 import admin.pojo.TriggerVO;
 import admin.service.ITesseractTriggerService;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -34,8 +32,13 @@ public class TesseractTriggerController {
 
     @GetMapping("/triggerList")
     public CommonResponseVO tesseractTriggerList(@NotNull @Min(1) Integer currentPage
-            , @NotNull @Min(1) @Max(50) Integer pageSize, TesseractTrigger condition) {
-        TriggerVO tesseractTriggerIPage = triggerService.listByPage(currentPage, pageSize, condition);
+            , @NotNull @Min(1) @Max(50) Integer pageSize, TesseractTrigger condition,
+                                                 Long startCreateTime,
+                                                 Long endCreateTime,
+                                                 Long startUpdateTime,
+                                                 Long endUpdateTime) {
+        TriggerVO tesseractTriggerIPage = triggerService.listByPage(currentPage, pageSize
+                , condition, startCreateTime, endCreateTime);
         return CommonResponseVO.success(tesseractTriggerIPage);
     }
 

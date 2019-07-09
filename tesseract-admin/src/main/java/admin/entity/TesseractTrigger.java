@@ -11,8 +11,6 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
-import static admin.constant.AdminConstant.TRGGER_STATUS_STOPING;
-
 /**
  * <p>
  *
@@ -55,7 +53,7 @@ public class TesseractTrigger implements Serializable {
     private Integer executorId;
 
     @NotBlank
-    private String executor_name;
+    private String executorName;
 
     private String creator = "admin";
 

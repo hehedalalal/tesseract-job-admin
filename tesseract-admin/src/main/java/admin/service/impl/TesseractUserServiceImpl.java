@@ -103,10 +103,29 @@ public class TesseractUserServiceImpl extends ServiceImpl<TesseractUserMapper, T
     }
 
     @Override
-    public IPage<TesseractUser> listByPage(Integer currentPage, Integer pageSize, TesseractUser condition) {
+    public IPage<TesseractUser> listByPage(Integer currentPage, Integer pageSize, TesseractUser condition,
+                                           Long startCreateTime,
+                                           Long endCreateTime) {
         Page<TesseractUser> page = new Page<>(currentPage, pageSize);
         QueryWrapper<TesseractUser> queryWrapper = new QueryWrapper<>();
         LambdaQueryWrapper<TesseractUser> lambda = queryWrapper.lambda();
+        //日期
+        if (startCreateTime != null) {
+            lambda.ge(TesseractUser::getCreateTime, startCreateTime);
+        }
+
+        if (endCreateTime != null) {
+            lambda.le(TesseractUser::getCreateTime, endCreateTime);
+        }
+
+        //其他
+        if (!StringUtils.isEmpty(condition.getName())) {
+            lambda.like(TesseractUser::getName, condition.getName());
+        }
+        if (condition.getStatus() != null) {
+            lambda.eq(TesseractUser::getStatus, condition.getStatus());
+        }
+
         return page(page, queryWrapper);
     }
 

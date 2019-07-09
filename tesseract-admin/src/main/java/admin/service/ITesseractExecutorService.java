@@ -17,7 +17,10 @@ import tesseract.core.dto.TesseractAdminRegistryResDTO;
 public interface ITesseractExecutorService extends IService<TesseractExecutor> {
     TesseractAdminRegistryResDTO registry(TesseractAdminRegistryRequest tesseractAdminRegistryRequest) throws Exception;
 
-    ExecutorVO listByPage(Long currentPage, Long pageSize, TesseractExecutor condition);
+    ExecutorVO listByPage(Long currentPage, Long pageSize,
+                          TesseractExecutor condition,
+                          Long startCreateTime,
+                          Long endCreateTime);
 
     void saveExecutor(TesseractExecutor tesseractExecutor);
 }

@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import tesseract.exception.TesseractException;
 
 import java.text.ParseException;
@@ -95,10 +96,36 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
 
     @Transactional
     @Override
-    public TriggerVO listByPage(Integer currentPage, Integer pageSize, TesseractTrigger condition) {
+    public TriggerVO listByPage(Integer currentPage, Integer pageSize, TesseractTrigger condition,
+                                Long startCreateTime,
+                                Long endCreateTime) {
         Page<TesseractTrigger> page = new Page<>(currentPage, pageSize);
         QueryWrapper<TesseractTrigger> queryWrapper = new QueryWrapper<>();
         LambdaQueryWrapper<TesseractTrigger> lambda = queryWrapper.lambda();
+        //日期
+        if (startCreateTime != null) {
+            lambda.ge(TesseractTrigger::getCreateTime, startCreateTime);
+        }
+
+        if (endCreateTime != null) {
+            lambda.le(TesseractTrigger::getCreateTime, endCreateTime);
+        }
+
+        //其他
+        if (!StringUtils.isEmpty(condition.getExecutorName())) {
+            lambda.like(TesseractTrigger::getExecutorName, condition.getExecutorName());
+        }
+        if (condition.getStatus() != null) {
+            lambda.eq(TesseractTrigger::getStatus, condition.getStatus());
+        }
+
+        if (!StringUtils.isEmpty(condition.getDescription())) {
+            lambda.like(TesseractTrigger::getDescription, condition.getDescription());
+        }
+        if (!StringUtils.isEmpty(condition.getCreator())) {
+            lambda.like(TesseractTrigger::getCreator, condition.getCreator());
+        }
+
         IPage<TesseractTrigger> pageInfo = page(page, queryWrapper);
         TriggerVO triggerVO = new TriggerVO();
         PageVO pageVO = new PageVO();

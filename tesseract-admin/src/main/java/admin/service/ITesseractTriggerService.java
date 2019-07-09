@@ -2,7 +2,6 @@ package admin.service;
 
 import admin.entity.TesseractTrigger;
 import admin.pojo.TriggerVO;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.text.ParseException;
@@ -19,7 +18,10 @@ import java.util.List;
 public interface ITesseractTriggerService extends IService<TesseractTrigger> {
     List<TesseractTrigger> findTriggerWithLock(int batchSize, long time, Integer timeWindowSize);
 
-    TriggerVO listByPage(Integer currentPage, Integer pageSize, TesseractTrigger condition);
+    TriggerVO listByPage(Integer currentPage, Integer pageSize,
+                         TesseractTrigger condition,
+                         Long startCreateTime,
+                         Long endCreateTime);
 
     void executeTrigger(Integer triggerId);
 

@@ -44,8 +44,15 @@ public class TesseractLogController {
 
     @RequestMapping("/logList")
     public CommonResponseVO logList(@NotNull @Min(1) Integer currentPage
-            , @NotNull @Min(1) @Max(50) Integer pageSize, TesseractLog condition) {
-        IPage<TesseractLog> logIPage = logService.listByPage(currentPage, pageSize, condition);
+            , @NotNull @Min(1) @Max(50) Integer pageSize
+            , TesseractLog condition, Long startCreateTime,
+                                    Long endCreateTime,
+                                    Long startUpdateTime,
+                                    Long endUpdateTime) {
+        IPage<TesseractLog> logIPage = logService.listByPage(currentPage, pageSize, condition, startCreateTime,
+                endCreateTime,
+                startUpdateTime,
+                endUpdateTime);
         LogVO logVO = new LogVO();
         PageVO pageVO = new PageVO();
         pageVO.setCurrentPage(logIPage.getCurrent());

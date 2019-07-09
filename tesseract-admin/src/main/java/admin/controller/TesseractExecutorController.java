@@ -2,14 +2,14 @@ package admin.controller;
 
 
 import admin.entity.TesseractExecutor;
-import admin.entity.TesseractTrigger;
-import admin.pojo.*;
+import admin.pojo.CommonResponseVO;
+import admin.pojo.ExecutorVO;
 import admin.service.ITesseractExecutorService;
-import admin.service.ITesseractTriggerService;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import tesseract.core.dto.TesseractAdminRegistryRequest;
 import tesseract.core.dto.TesseractAdminRegistryResDTO;
 import tesseract.core.dto.TesseractExecutorResponse;
@@ -17,8 +17,6 @@ import tesseract.core.dto.TesseractExecutorResponse;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-
-import java.util.List;
 
 import static tesseract.core.constant.CommonConstant.REGISTRY_MAPPING_SUFFIX;
 
@@ -46,8 +44,11 @@ public class TesseractExecutorController {
 
     @RequestMapping("/executorList")
     public CommonResponseVO executorList(@NotNull @Min(1) Long currentPage
-            , @NotNull @Min(1) @Max(50) Long pageSize, TesseractExecutor condition) {
-        ExecutorVO executorVO = tesseractExecutorService.listByPage(currentPage, pageSize, condition);
+            , @NotNull @Min(1) @Max(50) Long pageSize, TesseractExecutor condition,
+                                         Long startCreateTime,
+                                         Long endCreateTime) {
+        ExecutorVO executorVO = tesseractExecutorService.listByPage(currentPage, pageSize
+                , condition, startCreateTime, endCreateTime);
         return CommonResponseVO.success(executorVO);
     }
 

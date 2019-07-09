@@ -20,7 +20,10 @@ import java.util.Map;
 public interface ITesseractLogService extends IService<TesseractLog> {
     void notify(TesseractAdminJobNotify tesseractAdminJobNotify);
 
-    IPage<TesseractLog> listByPage(Integer currentPage, Integer pageSize, TesseractLog condition);
+    IPage<TesseractLog> listByPage(Integer currentPage, Integer pageSize, TesseractLog condition, Long startCreateTime,
+                                   Long endCreateTime,
+                                   Long startUpdateTime,
+                                   Long endUpdateTime);
 
     Map<String, Collection<Integer>> statisticsLogLine();
 

@@ -20,7 +20,9 @@ public interface ITesseractUserService extends IService<TesseractUser> {
 
     void userLogout(String token);
 
-    IPage<TesseractUser> listByPage(Integer currentPage, Integer pageSize, TesseractUser condition);
+    IPage<TesseractUser> listByPage(Integer currentPage, Integer pageSize, TesseractUser condition,
+                                    Long startCreateTime,
+                                    Long endCreateTime);
 
     void saveUser(TesseractUser tesseractUser);
 
