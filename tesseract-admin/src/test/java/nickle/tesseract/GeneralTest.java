@@ -3,6 +3,7 @@ package nickle.tesseract;
 import admin.core.scheduler.CronExpression;
 import com.google.common.collect.Maps;
 import org.junit.Test;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -48,5 +49,14 @@ public class GeneralTest {
             startDate = startDate.plusDays(1);
         }
         System.out.println(linkedHashMap.keySet());
+    }
+
+    @Test
+    public void testPass(){
+        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+        //加密"0"
+        String encode = bCryptPasswordEncoder.encode("admin");
+        System.out.println(encode);
+        //结果：$2a$10$/eEV4X7hXPzYGzOLXfCizu6h7iRisp7I116wPA3P9uRcHAKJyY4TK
     }
 }

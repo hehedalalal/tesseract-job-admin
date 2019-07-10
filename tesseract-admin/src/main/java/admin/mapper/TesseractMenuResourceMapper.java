@@ -1,7 +1,11 @@
 package admin.mapper;
 
 import admin.entity.TesseractMenuResource;
+import admin.entity.TesseractRole;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +17,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface TesseractMenuResourceMapper extends BaseMapper<TesseractMenuResource> {
 
+    List<TesseractMenuResource> selectMenusByUserId(@Param("roleIds") List<Integer> roleIds);
 }

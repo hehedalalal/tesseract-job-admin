@@ -105,5 +105,16 @@ public class TesseractUserController {
     private CommonResponseVO statisticsUser() {
         return CommonResponseVO.success(tesseractUserService.statisticsUser());
     }
+
+    /**
+     * 获取用户权限信息，首次从数据库获取，后期考虑Redis中获取
+     * @param httpServletRequest
+     * @return
+     */
+    @RequestMapping("/getUserAuthInfo")
+    public CommonResponseVO getUserInfo(HttpServletRequest httpServletRequest) {
+        String token = httpServletRequest.getHeader("X-Token");
+        return CommonResponseVO.success(tesseractUserService.getUserAuthInfo(token));
+    }
 }
 

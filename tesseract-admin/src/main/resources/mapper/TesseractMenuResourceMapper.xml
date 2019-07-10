@@ -26,4 +26,26 @@
         id, name, component, path, url_pattern, iconCls, parent_id, desc, order, create_user_id, create_user_name, update_user_id, update_user_name, is_del, status
     </sql>
 
+
+    <select id="selectMenusByUserId" resultType="admin.entity.TesseractMenuResource">
+        SELECT
+            m.*,
+            GROUP_CONCAT(b.btn_auth_code) as btnAuthCodes
+        FROM
+        tesseract_role_resources  AS rr
+        LEFT JOIN tesseract_menu_resource AS m ON rr.menu_id = m.id
+        LEFT JOIN tesseract_btn_resource AS b ON rr.btn_id = b.id
+
+        <where>
+            <if test="roleIds != null and roleIds.size() > 0">
+                rr.role_id IN
+                <foreach collection="roleIds" index="index" item="item"  open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+
+        GROUP BY m.id
+    </select>
+
 </mapper>

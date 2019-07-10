@@ -73,5 +73,11 @@ public class TesseractMenuResource implements Serializable {
     @ApiModelProperty(value = "状态码，保留字段")
     private Integer status;
 
+    /**
+     * 菜单关联按钮的权限code,逗号分隔
+     */
+    @TableField(exist = false)
+    private String btnAuthCodes;
+
 
 }

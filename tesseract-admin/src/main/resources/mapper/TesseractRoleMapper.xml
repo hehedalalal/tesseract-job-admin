@@ -20,4 +20,16 @@
         id, role_name, role_desc, create_user_id, create_user_name, update_user_id, update_user_name, is_del, status
     </sql>
 
+
+    <select id="selectRolesByUserId" resultMap="BaseResultMap" parameterType="int">
+        SELECT
+            r.*
+        FROM
+            tesseract_role AS r
+            LEFT JOIN tesseract_user_role AS ur ON r.id = ur.role_id
+        WHERE
+            ur.user_id = #{userId}
+    </select>
+
+
 </mapper>

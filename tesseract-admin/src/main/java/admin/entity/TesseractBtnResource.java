@@ -32,6 +32,9 @@ public class TesseractBtnResource implements Serializable {
     @ApiModelProperty(value = "按钮编码（用于界面配置）")
     private String btnCode;
 
+    @ApiModelProperty(value = "按钮权限标志")
+    private String btnAuthCode;
+
     @ApiModelProperty(value = "按钮名称")
     private String btnName;
 
