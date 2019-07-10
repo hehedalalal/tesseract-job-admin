@@ -49,6 +49,7 @@ public class TesseractTrigger implements Serializable {
 
     @NotBlank
     private String groupName;
+
     @NotNull
     private Integer groupId;
 

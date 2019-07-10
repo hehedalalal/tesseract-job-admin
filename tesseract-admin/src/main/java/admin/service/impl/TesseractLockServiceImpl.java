@@ -33,6 +33,7 @@ public class TesseractLockServiceImpl extends ServiceImpl<TesseractLockMapper, T
             TesseractLock tesseractLock = getOne(queryWrapper);
             //锁不存在上锁，锁存在添加标识
             if (tesseractLock == null) {
+                tesseractLock = new TesseractLock();
                 tesseractLock.setName(lockName);
                 tesseractLock.setGroupName(groupName);
                 this.save(tesseractLock);

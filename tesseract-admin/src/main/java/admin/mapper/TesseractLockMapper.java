@@ -2,7 +2,7 @@ package admin.mapper;
 
 import admin.entity.TesseractLock;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import feign.Param;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * <p>

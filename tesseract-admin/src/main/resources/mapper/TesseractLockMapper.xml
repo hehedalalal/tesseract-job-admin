@@ -13,7 +13,7 @@
     <sql id="Base_Column_List">
         id, name
     </sql>
-    <select id="lock" parameterType="string" resultMap="BaseResultMap">
+    <select id="lock" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"></include>
         from
