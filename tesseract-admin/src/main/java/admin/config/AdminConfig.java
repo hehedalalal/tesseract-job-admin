@@ -3,6 +3,7 @@ package admin.config;
 import admin.core.scheduler.TesseractScheduleBoot;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import feign.Feign;
+import feign.Request;
 import feign.Target;
 import feign.codec.Decoder;
 import feign.codec.Encoder;
@@ -41,7 +42,8 @@ public class AdminConfig {
      */
     @Bean
     public IAdminFeignService iAdminFeignService() {
-        IAdminFeignService iAdminFeignService = Feign.builder().encoder(encoder).decoder(decoder)
+        Request.Options options = new Request.Options(3 * 1000, 3 * 1000, true);
+        IAdminFeignService iAdminFeignService = Feign.builder().encoder(encoder).decoder(decoder).options(options)
                 .target(Target.EmptyTarget.create(IAdminFeignService.class));
         return iAdminFeignService;
     }
