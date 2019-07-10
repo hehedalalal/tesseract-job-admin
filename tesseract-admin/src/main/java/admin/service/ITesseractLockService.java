@@ -12,5 +12,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2019-07-03
  */
 public interface ITesseractLockService extends IService<TesseractLock> {
-    TesseractLock lock(String lockName);
+    TesseractLock lock(String lockName, String groupName);
 }

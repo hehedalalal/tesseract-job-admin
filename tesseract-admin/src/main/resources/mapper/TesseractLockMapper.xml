@@ -6,6 +6,7 @@
     <resultMap id="BaseResultMap" type="admin.entity.TesseractLock">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
+        <result column="group_name" property="groupName"/>
     </resultMap>
 
     <!-- 通用查询结果列 -->
@@ -18,6 +19,8 @@
         from
         tesseract_lock
         where
+        group_name=#{groupName}
+        and
         name=#{lockName}
         for update
     </select>

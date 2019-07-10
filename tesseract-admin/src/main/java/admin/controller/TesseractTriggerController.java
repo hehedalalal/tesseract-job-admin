@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.text.ParseException;
 
@@ -49,8 +50,8 @@ public class TesseractTriggerController {
     }
 
     @RequestMapping("/execute")
-    public CommonResponseVO execute(@NotNull Integer triggerId) {
-        triggerService.executeTrigger(triggerId);
+    public CommonResponseVO execute(@NotBlank String groupName, @NotNull Integer triggerId) {
+        triggerService.executeTrigger(groupName, triggerId);
         return CommonResponseVO.SUCCESS;
     }
 

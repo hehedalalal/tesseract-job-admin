@@ -16,14 +16,14 @@ import java.util.List;
  * @since 2019-07-03
  */
 public interface ITesseractTriggerService extends IService<TesseractTrigger> {
-    List<TesseractTrigger> findTriggerWithLock(int batchSize, long time, Integer timeWindowSize);
+    List<TesseractTrigger> findTriggerWithLock(String groupName, int batchSize, long time, Integer timeWindowSize);
 
     TriggerVO listByPage(Integer currentPage, Integer pageSize,
                          TesseractTrigger condition,
                          Long startCreateTime,
                          Long endCreateTime);
 
-    void executeTrigger(Integer triggerId);
+    void executeTrigger(String groupName, Integer triggerId);
 
     void startTrigger(Integer triggerId) throws ParseException;
 

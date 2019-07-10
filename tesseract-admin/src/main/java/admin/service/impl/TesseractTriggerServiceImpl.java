@@ -1,7 +1,7 @@
 package admin.service.impl;
 
 import admin.core.scheduler.CronExpression;
-import admin.core.scheduler.TesseractTriggerDispatcher;
+import admin.core.scheduler.TesseractScheduleBoot;
 import admin.entity.TesseractTrigger;
 import admin.mapper.TesseractTriggerMapper;
 import admin.pojo.PageVO;
@@ -42,8 +42,6 @@ import static admin.constant.AdminConstant.*;
 public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMapper, TesseractTrigger> implements ITesseractTriggerService {
     @Autowired
     private ITesseractLockService lockService;
-    @Autowired
-    private TesseractTriggerDispatcher triggerDispatcher;
 
     /**
      * 获取锁并获取到时间点之前的触发器
@@ -54,11 +52,13 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
      * @return
      */
     @Override
-    public List<TesseractTrigger> findTriggerWithLock(int batchSize, long time, Integer timeWindowSize) {
-        lockService.lock(TRIGGER_LOCK_NAME);
+    public List<TesseractTrigger> findTriggerWithLock(String groupName, int batchSize, long time, Integer timeWindowSize) {
+        lockService.lock(groupName, TRIGGER_LOCK_NAME);
         QueryWrapper<TesseractTrigger> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda().le(TesseractTrigger::getNextTriggerTime, time + timeWindowSize)
-                .eq(TesseractTrigger::getStatus, TRGGER_STATUS_STARTING).orderByDesc(TesseractTrigger::getNextTriggerTime);
+                .eq(TesseractTrigger::getStatus, TRGGER_STATUS_STARTING)
+                .eq(TesseractTrigger::getGroupName, groupName)
+                .orderByDesc(TesseractTrigger::getNextTriggerTime);
         Page<TesseractTrigger> page = new Page<>(1, batchSize);
         IPage<TesseractTrigger> listPage = page(page, queryWrapper);
         List<TesseractTrigger> triggerList = listPage.getRecords();
@@ -136,10 +136,9 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
         return triggerVO;
     }
 
-    @Transactional
     @Override
-    public void executeTrigger(Integer triggerId) {
-        triggerDispatcher.dispatchTrigger(Arrays.asList(getTriggerById(triggerId)), true);
+    public void executeTrigger(String groupName, Integer triggerId) {
+        TesseractScheduleBoot.executeTrigger(groupName, Arrays.asList(getTriggerById(triggerId)));
     }
 
     @Override

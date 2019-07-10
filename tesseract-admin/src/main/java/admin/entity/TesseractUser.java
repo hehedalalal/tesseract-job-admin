@@ -38,4 +38,7 @@ public class TesseractUser implements Serializable {
 
     private Long updateTime;
 
+    private String groupName;
+
+    private Integer groupId;
 }

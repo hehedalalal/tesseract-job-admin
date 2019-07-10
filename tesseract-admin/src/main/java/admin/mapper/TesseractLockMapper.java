@@ -13,5 +13,5 @@ import feign.Param;
  * @since 2019-07-03
  */
 public interface TesseractLockMapper extends BaseMapper<TesseractLock> {
-    TesseractLock lock(@Param("lockName") String lockName);
+    TesseractLock lock(@Param("groupName") String groupName, @Param("lockName") String lockName);
 }

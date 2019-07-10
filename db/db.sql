@@ -29,6 +29,8 @@ create table tesseract_trigger
     executor_name     varchar(30)  not null,
     create_time       bigint       not null,
     update_time       bigint       not null,
+    group_name varchar(30) not null,
+    group_id int unsigned not null,
     index (status),
     unique (name)
 ) engine = InnoDB
@@ -54,6 +56,8 @@ create table tesseract_executor
     creator     varchar(255) not null,
     description text         not null,
     create_time bigint       not null,
+    group_name varchar(30) not null,
+    group_id int unsigned not null,
     unique (name)
 ) engine = InnoDB
   default charset = utf8;
@@ -75,7 +79,9 @@ create table tesseract_executor_detail
 create table tesseract_lock
 (
     id   int unsigned primary key auto_increment,
-    name varchar(30) not null
+    group_name varchar(30) not null,
+    name varchar(30) not null,
+    index(group_name,name)
 ) engine = InnoDB
   default charset = utf8;
 
@@ -86,20 +92,22 @@ create table tesseract_user
     password    varchar(32) not null,
     status      tinyint     not null,
     create_time bigint      not null,
-    update_time bigint      not null
+    update_time bigint      not null,
+    group_name varchar(30) not null,
+    group_id int unsigned not null
 ) engine = InnoDB
   default charset = utf8;
 
 create table tesseract_token
 (
     id          int unsigned primary key auto_increment,
-    userId      int unsigned not null,
-    userName    varchar(30)  not null,
+    user_id      int unsigned not null,
+    user_name    varchar(30)  not null,
     token       varchar(255) not null default '',
     create_time bigint       not null,
     expire_time bigint       not null,
     update_time bigint       not null,
-    unique (userId)
+    unique (user_id)
 ) engine = InnoDB
   default charset = utf8;
 
@@ -108,6 +116,8 @@ create table tesseract_log
     id           bigint unsigned primary key auto_increment,
     trigger_name varchar(30)  not null,
     class_name   varchar(255) not null,
+    group_name varchar(30) not null,
+    group_id int unsigned not null,
     socket       varchar(255) not null,
     status       tinyint      not null,
     msg          text         not null,
@@ -118,12 +128,32 @@ create table tesseract_log
 ) engine = InnoDB
   default charset = utf8;
 
-insert into tesseract_user(name, password, status, create_time, update_time)
-values ('admin', '21232F297A57A5A743894A0E4A801FC3', 0, 1562336661000, 1562336661000);
+
+create table tesseract_group
+(
+    id           bigint unsigned primary key auto_increment,
+    name         varchar(30)  not null,
+    mail         varchar(255) not null,
+    thread_pool_num    int    not null,
+    description          varchar(255)  not null default '',
+    creator      varchar(255) not null,
+    create_time  bigint       not null,
+    update_time     bigint       not null
+) engine = InnoDB
+  default charset = utf8;
+
+
+
+insert into tesseract_group(id,name, mail, thread_pool_num, creator, create_time, update_time)
+values (1,'defaultGroup','xxxx@xx.mail',10,'admin',1562512500000,1562512500000);
+insert into tesseract_user(name, password, status, create_time, update_time,group_id,group_name)
+values ('admin', '21232F297A57A5A743894A0E4A801FC3', 0, 1562336661000, 1562336661000,1,'defaultGroup');
 insert into tesseract_trigger( name, next_trigger_time, prev_trigger_time, cron, strategy, sharding_num, retry_count
-                             , status, creator, description, executor_id, executor_name, create_time, update_time)
-values ('testTrigger', 1562512500000, 0, '*/5 * * * * ?', 0, 0, 0, 0, 'admin', 'test', 1, 'testExecutor',1562512500000, 1562512500000);
-insert into tesseract_executor(name, creator, description, create_time) values ('testExecutor','admin','test',1562512500000);
+                             , status, creator, description, executor_id, executor_name, create_time, update_time,group_id,group_name)
+values ('testTrigger', 1562512500000, 0, '*/5 * * * * ?', 0, 0, 0, 0, 'admin', 'test', 1, 'testExecutor'
+,1562512500000, 1562512500000,1,'defaultGroup');
+insert into tesseract_executor(name, creator, description, create_time,group_id,group_name)
+values ('testExecutor','admin','test',1562512500000,1,'defaultGroup');
 
 
 truncate table tesseract_job_detail;

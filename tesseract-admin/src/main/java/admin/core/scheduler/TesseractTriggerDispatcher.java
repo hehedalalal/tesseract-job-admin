@@ -1,15 +1,14 @@
 package admin.core.scheduler;
 
 import admin.constant.AdminConstant;
-import admin.core.scheduler.pool.DefaultSchedulerThreadPool;
 import admin.core.scheduler.pool.ISchedulerThreadPool;
 import admin.core.scheduler.router.impl.HashRouter;
 import admin.entity.*;
 import admin.service.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import feignService.IAdminFeignService;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import tesseract.core.dto.TesseractExecutorRequest;
 import tesseract.core.dto.TesseractExecutorResponse;
@@ -23,20 +22,16 @@ import static tesseract.core.constant.CommonConstant.EXECUTE_MAPPING;
 import static tesseract.core.constant.CommonConstant.HTTP_PREFIX;
 
 @Slf4j
+@Data
 public class TesseractTriggerDispatcher {
-    @Autowired
+    private String groupName;
     private ITesseractJobDetailService tesseractJobDetailService;
-    @Autowired
     private ITesseractLogService tesseractLogService;
-    @Autowired
     private ITesseractExecutorDetailService executorDetailService;
-    @Autowired
     private ITesseractExecutorService executorService;
-    @Autowired
     private ITesseractFiredTriggerService firedTriggerService;
-    @Autowired
     private IAdminFeignService feignService;
-    private ISchedulerThreadPool threadPool = new DefaultSchedulerThreadPool(500);
+    private ISchedulerThreadPool threadPool;
 
 //    private final String THREAD_NAME_FORMATTER = "TesseractSchedulerThread-%d";
 //    private final AtomicInteger ATOMIC_INTEGER = new AtomicInteger(0);
@@ -83,6 +78,8 @@ public class TesseractTriggerDispatcher {
                 tesseractLog.setClassName("");
                 tesseractLog.setCreateTime(System.currentTimeMillis());
                 tesseractLog.setCreator("test");
+                tesseractLog.setGroupId(trigger.getGroupId());
+                tesseractLog.setGroupName(trigger.getGroupName());
                 tesseractLog.setTriggerName(trigger.getName());
                 tesseractLog.setEndTime(0L);
                 //获取job detail
