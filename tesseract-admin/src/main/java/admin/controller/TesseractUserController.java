@@ -32,6 +32,7 @@ import java.util.HashMap;
  */
 @RestController
 @RequestMapping("/tesseract-user")
+@Validated
 public class TesseractUserController {
     @Autowired
     private ITesseractUserService tesseractUserService;
