@@ -29,10 +29,10 @@ public class TesseractToken implements Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    @TableField("userId")
+    @TableField("user_id")
     private Integer userId;
 
-    @TableField("userName")
+    @TableField("user_name")
     private String userName;
 
     private String token;
