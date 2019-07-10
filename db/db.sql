@@ -131,7 +131,7 @@ create table tesseract_log
 
 create table tesseract_group
 (
-    id           bigint unsigned primary key auto_increment,
+    id           int unsigned primary key auto_increment,
     name         varchar(30)  not null,
     mail         varchar(255) not null,
     thread_pool_num    int    not null,

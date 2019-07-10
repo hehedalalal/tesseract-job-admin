@@ -15,8 +15,9 @@ public class ControllerExceptionAdvice {
 
     @ExceptionHandler(TesseractException.class)
     public CommonResponseVO tesseractExceptionExceptionHandler(TesseractException e) {
+        e.printStackTrace();
         log.error(e.getMsg());
-        return CommonResponseVO.fail(e.getStatus(), e.getMsg());
+        return CommonResponseVO.fail(e.getStatus(), e.getMsg(), null);
     }
 
     @ExceptionHandler(Exception.class)

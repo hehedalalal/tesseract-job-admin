@@ -54,7 +54,7 @@ public class AdminUtils {
                 if (!"serialVersionUID".equals(name) && value != null) {
                     //添加进查询条件
                     //String 采用like处理
-                    if (value instanceof String) {
+                    if (value instanceof String || !"".equals(((String) value).trim())) {
                         queryWrapper.like(name, value);
                     } else {
                         queryWrapper.eq(name, value);

@@ -136,4 +136,14 @@ public class TesseractScheduleBoot {
         tesseractTriggerDispatcher.dispatchTrigger(tesseractTriggerList, true);
     }
 
+    public static void updateThreadNum(String groupName, Integer threadNum) {
+        TesseractTriggerDispatcher tesseractTriggerDispatcher = triggerDispatcherHashMap.get(groupName);
+        if (tesseractTriggerDispatcher == null) {
+            log.error("找不到组:{} TesseractTriggerDispatcher", groupName);
+            throw new TesseractException("找不到TesseractTriggerDispatcher");
+        }
+        ISchedulerThreadPool threadPool = tesseractTriggerDispatcher.getThreadPool();
+        threadPool.changeSize(threadNum);
+
+    }
 }

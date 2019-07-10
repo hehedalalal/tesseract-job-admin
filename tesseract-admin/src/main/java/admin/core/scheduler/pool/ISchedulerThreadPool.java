@@ -15,4 +15,6 @@ public interface ISchedulerThreadPool {
     void shutdown();
 
     void init();
+
+    void changeSize(Integer threadNum);
 }
