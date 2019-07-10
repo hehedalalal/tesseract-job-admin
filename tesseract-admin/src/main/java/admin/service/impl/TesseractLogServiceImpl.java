@@ -94,21 +94,7 @@ public class TesseractLogServiceImpl extends ServiceImpl<TesseractLogMapper, Tes
             lambda.le(TesseractLog::getEndTime, endUpdateTime);
         }
         //其他
-        if (!StringUtils.isEmpty(condition.getTriggerName())) {
-            lambda.like(TesseractLog::getTriggerName, condition.getTriggerName());
-        }
-        if (!StringUtils.isEmpty(condition.getCreator())) {
-            lambda.like(TesseractLog::getCreator, condition.getCreator());
-        }
-        if (!StringUtils.isEmpty(condition.getMsg())) {
-            lambda.like(TesseractLog::getTriggerName, condition.getTriggerName());
-        }
-        if (!StringUtils.isEmpty(condition.getSocket())) {
-            lambda.like(TesseractLog::getSocket, condition.getSocket());
-        }
-        if (condition.getStatus() != null) {
-            lambda.eq(TesseractLog::getStatus, condition.getStatus());
-        }
+        AdminUtils.buildCondition(queryWrapper, condition);
         //按时间倒序
         lambda.orderByDesc(TesseractLog::getCreateTime);
         return page(page, queryWrapper);

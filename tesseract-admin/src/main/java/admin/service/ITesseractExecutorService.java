@@ -22,5 +22,7 @@ public interface ITesseractExecutorService extends IService<TesseractExecutor> {
                           Long startCreateTime,
                           Long endCreateTime);
 
-    void saveExecutor(TesseractExecutor tesseractExecutor);
+    void saveOrUpdateExecutor(TesseractExecutor tesseractExecutor);
+
+    void deleteExecutor(Integer executorId);
 }

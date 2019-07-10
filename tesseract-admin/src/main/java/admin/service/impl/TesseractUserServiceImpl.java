@@ -119,19 +119,19 @@ public class TesseractUserServiceImpl extends ServiceImpl<TesseractUserMapper, T
         }
 
         //其他
-        if (!StringUtils.isEmpty(condition.getName())) {
-            lambda.like(TesseractUser::getName, condition.getName());
-        }
-        if (condition.getStatus() != null) {
-            lambda.eq(TesseractUser::getStatus, condition.getStatus());
-        }
-
+        AdminUtils.buildCondition(queryWrapper, condition);
         return page(page, queryWrapper);
     }
 
     @Override
-    public void saveUser(TesseractUser tesseractUser) {
+    public void saveOrUpdateUser(TesseractUser tesseractUser) {
         long currentTimeMillis = System.currentTimeMillis();
+        Integer id = tesseractUser.getId();
+        if (id != null) {
+            tesseractUser.setUpdateTime(currentTimeMillis);
+            updateById(tesseractUser);
+            return;
+        }
         tesseractUser.setStatus(USER_VALID);
         tesseractUser.setUpdateTime(currentTimeMillis);
         tesseractUser.setPassword(defaultPasswordMD5);
@@ -140,9 +140,20 @@ public class TesseractUserServiceImpl extends ServiceImpl<TesseractUserMapper, T
     }
 
     @Override
-    public void validUser(String userId) {
-        QueryWrapper<TesseractUser> queryWrapper = new QueryWrapper<>();
-        TesseractUser user = getOne(queryWrapper);
+    public void passwordRevert(Integer userId) {
+        TesseractUser user = getById(userId);
+        if (user == null) {
+            throw new TesseractException("用户为空");
+        }
+        user.setPassword(defaultPasswordMD5);
+        user.setUpdateTime(System.currentTimeMillis());
+        updateById(user);
+    }
+
+    @Override
+    public void validUser(Integer userId) {
+
+        TesseractUser user = getById(userId);
         if (user == null) {
             throw new TesseractException("用户不存在");
         }
@@ -154,9 +165,8 @@ public class TesseractUserServiceImpl extends ServiceImpl<TesseractUserMapper, T
     }
 
     @Override
-    public void invalidUser(String userId) {
-        QueryWrapper<TesseractUser> queryWrapper = new QueryWrapper<>();
-        TesseractUser user = getOne(queryWrapper);
+    public void invalidUser(Integer userId) {
+        TesseractUser user = getById(userId);
         if (user == null) {
             throw new TesseractException("用户不存在");
         }
@@ -174,6 +184,15 @@ public class TesseractUserServiceImpl extends ServiceImpl<TesseractUserMapper, T
         long endTime = now.plus(1, ChronoUnit.DAYS).atStartOfDay().toInstant(ZoneOffset.of("+8")).toEpochMilli();
         List<StatisticsLogDO> statisticsLogDOList = tokenService.statisticsActiveUser(startTime, endTime);
         return AdminUtils.buildStatisticsList(statisticsLogDOList, statisticsDays);
+    }
+
+    @Override
+    public void deleteUser(Integer userId) {
+        TesseractUser user = getById(userId);
+        if (user == null) {
+            throw new TesseractException("用户不存在");
+        }
+        removeById(userId);
     }
 
     private String generateToken(TesseractUser user) {

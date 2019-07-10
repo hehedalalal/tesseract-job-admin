@@ -10,6 +10,8 @@ import tesseract.core.handler.JobHandler;
 public class TestJob implements JobHandler {
     @Override
     public void execute(ExecutorContext executorContext) throws Exception {
-        //System.out.println(111);
+        System.out.println("任务执行开始");
+        Thread.sleep(10 * 1000);
+        System.out.println("任务执行结束");
     }
 }

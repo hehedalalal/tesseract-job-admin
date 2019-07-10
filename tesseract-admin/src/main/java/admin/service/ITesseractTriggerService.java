@@ -29,7 +29,9 @@ public interface ITesseractTriggerService extends IService<TesseractTrigger> {
 
     void stopTrigger(Integer triggerId);
 
-    void saveTrigger(TesseractTrigger tesseractTrigger) throws Exception;
+    void deleteTrigger(Integer triggerId);
+
+    void saveOrUpdateTrigger(TesseractTrigger tesseractTrigger) throws Exception;
 
 
 }

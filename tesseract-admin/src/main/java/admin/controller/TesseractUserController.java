@@ -78,19 +78,31 @@ public class TesseractUserController {
 
     @RequestMapping("/addUser")
     public CommonResponseVO addUser(@Validated @RequestBody TesseractUser tesseractUser) throws Exception {
-        tesseractUserService.saveUser(tesseractUser);
+        tesseractUserService.saveOrUpdateUser(tesseractUser);
+        return CommonResponseVO.SUCCESS;
+    }
+
+    @RequestMapping("/passwordRevert")
+    public CommonResponseVO passwordRevert(@NotNull Integer userId) throws Exception {
+        tesseractUserService.passwordRevert(userId);
         return CommonResponseVO.SUCCESS;
     }
 
     @RequestMapping("/validUser")
-    public CommonResponseVO validUser(@NotNull String userId) throws Exception {
+    public CommonResponseVO validUser(@NotNull Integer userId) throws Exception {
         tesseractUserService.validUser(userId);
         return CommonResponseVO.SUCCESS;
     }
 
     @RequestMapping("/invalidUser")
-    public CommonResponseVO invalidUser(@NotNull String userId) throws Exception {
+    public CommonResponseVO invalidUser(@NotNull Integer userId) throws Exception {
         tesseractUserService.invalidUser(userId);
+        return CommonResponseVO.SUCCESS;
+    }
+
+    @RequestMapping("/deleteUser")
+    public CommonResponseVO deleteUser(@NotNull Integer userId) throws Exception {
+        tesseractUserService.deleteUser(userId);
         return CommonResponseVO.SUCCESS;
     }
 

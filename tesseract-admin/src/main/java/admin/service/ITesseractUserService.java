@@ -24,11 +24,15 @@ public interface ITesseractUserService extends IService<TesseractUser> {
                                     Long startCreateTime,
                                     Long endCreateTime);
 
-    void saveUser(TesseractUser tesseractUser);
+    void saveOrUpdateUser(TesseractUser tesseractUser);
 
-    void validUser(String userId);
+    void passwordRevert(Integer userId);
 
-    void invalidUser(String userId);
+    void validUser(Integer userId);
+
+    void invalidUser(Integer userId);
 
     Collection<Integer> statisticsUser();
+
+    void deleteUser(Integer userId);
 }

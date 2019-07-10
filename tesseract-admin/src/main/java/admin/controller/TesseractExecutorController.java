@@ -60,7 +60,13 @@ public class TesseractExecutorController {
 
     @RequestMapping("/addExecutor")
     public CommonResponseVO addExecutor(@Validated @RequestBody TesseractExecutor tesseractExecutor) throws Exception {
-        tesseractExecutorService.saveExecutor(tesseractExecutor);
+        tesseractExecutorService.saveOrUpdateExecutor(tesseractExecutor);
+        return CommonResponseVO.SUCCESS;
+    }
+
+    @RequestMapping("/deleteExecutor")
+    public CommonResponseVO deleteExecutor(@NotNull Integer executorId) throws Exception {
+        tesseractExecutorService.deleteExecutor(executorId);
         return CommonResponseVO.SUCCESS;
     }
 }

@@ -8,6 +8,7 @@ import admin.pojo.PageVO;
 import admin.pojo.TriggerVO;
 import admin.service.ITesseractLockService;
 import admin.service.ITesseractTriggerService;
+import admin.util.AdminUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -18,9 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 import tesseract.exception.TesseractException;
 
+import javax.validation.constraints.NotBlank;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Date;
@@ -81,11 +82,23 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
     }
 
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
-    public void saveTrigger(TesseractTrigger tesseractTrigger) throws Exception {
+    public void saveOrUpdateTrigger(TesseractTrigger tesseractTrigger) throws Exception {
         CronExpression cronExpression = new CronExpression(tesseractTrigger.getCron());
         long currentTimeMillis = System.currentTimeMillis();
+        Integer triggerId = tesseractTrigger.getId();
+        //更新
+        if (triggerId != null) {
+            TesseractTrigger trigger = getById(triggerId);
+            @NotBlank String oldCron = trigger.getCron();
+            //重新计算下一次调度时间
+            if (!tesseractTrigger.getCron().equals(oldCron)) {
+                tesseractTrigger.setNextTriggerTime(cronExpression.getTimeAfter(new Date()).getTime());
+            }
+            updateById(tesseractTrigger);
+            return;
+        }
         tesseractTrigger.setPrevTriggerTime(0L);
         tesseractTrigger.setNextTriggerTime(cronExpression.getTimeAfter(new Date()).getTime());
         tesseractTrigger.setCreateTime(currentTimeMillis);
@@ -110,22 +123,7 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
         if (endCreateTime != null) {
             lambda.le(TesseractTrigger::getCreateTime, endCreateTime);
         }
-
-        //其他
-        if (!StringUtils.isEmpty(condition.getExecutorName())) {
-            lambda.like(TesseractTrigger::getExecutorName, condition.getExecutorName());
-        }
-        if (condition.getStatus() != null) {
-            lambda.eq(TesseractTrigger::getStatus, condition.getStatus());
-        }
-
-        if (!StringUtils.isEmpty(condition.getDescription())) {
-            lambda.like(TesseractTrigger::getDescription, condition.getDescription());
-        }
-        if (!StringUtils.isEmpty(condition.getCreator())) {
-            lambda.like(TesseractTrigger::getCreator, condition.getCreator());
-        }
-
+        AdminUtils.buildCondition(queryWrapper, condition);
         IPage<TesseractTrigger> pageInfo = page(page, queryWrapper);
         TriggerVO triggerVO = new TriggerVO();
         PageVO pageVO = new PageVO();
@@ -158,6 +156,11 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
         TesseractTrigger trigger = getTriggerById(triggerId);
         trigger.setStatus(TRGGER_STATUS_STOPING);
         updateById(trigger);
+    }
+
+    @Override
+    public void deleteTrigger(Integer triggerId) {
+        deleteTrigger(triggerId);
     }
 
     private TesseractTrigger getTriggerById(Integer triggerId) {

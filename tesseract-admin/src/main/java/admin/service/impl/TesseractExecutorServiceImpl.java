@@ -12,6 +12,7 @@ import admin.service.ITesseractExecutorDetailService;
 import admin.service.ITesseractExecutorService;
 import admin.service.ITesseractJobDetailService;
 import admin.service.ITesseractTriggerService;
+import admin.util.AdminUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -22,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import tesseract.core.dto.TesseractAdminJobDetailDTO;
 import tesseract.core.dto.TesseractAdminRegistryRequest;
 import tesseract.core.dto.TesseractAdminRegistryResDTO;
@@ -81,13 +81,7 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
         }
 
         //其他
-        if (!StringUtils.isEmpty(condition.getName())) {
-            lambda.like(TesseractExecutor::getName, condition.getName());
-        }
-        if (!StringUtils.isEmpty(condition.getCreator())) {
-            lambda.like(TesseractExecutor::getCreator, condition.getCreator());
-        }
-
+        AdminUtils.buildCondition(queryWrapper, condition);
         IPage<TesseractExecutor> page = page(tesseractExecutorPage, queryWrapper);
         PageVO pageVO = new PageVO();
         pageVO.setCurrentPage(currentPage);
@@ -110,10 +104,20 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
     }
 
     @Override
-    public void saveExecutor(TesseractExecutor tesseractExecutor) {
+    public void saveOrUpdateExecutor(TesseractExecutor tesseractExecutor) {
+        Integer executorId = tesseractExecutor.getId();
+        if (executorId != null) {
+            this.updateById(tesseractExecutor);
+            return;
+        }
         tesseractExecutor.setCreateTime(System.currentTimeMillis());
         tesseractExecutor.setCreator("admin");
         save(tesseractExecutor);
+    }
+
+    @Override
+    public void deleteExecutor(Integer executorId) {
+        removeById(executorId);
     }
 
     private TesseractAdminRegistryResDTO toRegistry(String socket, List<TesseractAdminJobDetailDTO> tesseractAdminJobDetailDTOList) {

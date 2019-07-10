@@ -44,7 +44,7 @@ public class TesseractTriggerController {
 
     @PostMapping("/addTrigger")
     public CommonResponseVO addTrigger(@Validated @RequestBody TesseractTrigger tesseractTrigger) throws Exception {
-        triggerService.saveTrigger(tesseractTrigger);
+        triggerService.saveOrUpdateTrigger(tesseractTrigger);
         return CommonResponseVO.SUCCESS;
     }
 
@@ -63,6 +63,12 @@ public class TesseractTriggerController {
     @RequestMapping("/stop")
     public CommonResponseVO stop(@NotNull Integer triggerId) {
         triggerService.stopTrigger(triggerId);
+        return CommonResponseVO.SUCCESS;
+    }
+
+    @RequestMapping("/delete")
+    public CommonResponseVO delete(@NotNull Integer triggerId) {
+        triggerService.deleteTrigger(triggerId);
         return CommonResponseVO.SUCCESS;
     }
 }
