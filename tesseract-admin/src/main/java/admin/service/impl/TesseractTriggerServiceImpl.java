@@ -51,6 +51,7 @@ public class TesseractTriggerServiceImpl extends ServiceImpl<TesseractTriggerMap
      * @param timeWindowSize
      * @return
      */
+    @Transactional
     @Override
     public List<TesseractTrigger> findTriggerWithLock(String groupName, int batchSize, long time, Integer timeWindowSize) {
         lockService.lock(groupName, TRIGGER_LOCK_NAME);
