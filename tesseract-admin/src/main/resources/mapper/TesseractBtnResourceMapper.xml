@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="admin.mapper.TesseractBtnResourceMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="admin.entity.TesseractBtnResource">
+        <id column="id" property="id" />
+        <result column="btn_code" property="btnCode" />
+        <result column="btn_name" property="btnName" />
+        <result column="menu_id" property="menuId" />
+        <result column="create_user_id" property="createUserId" />
+        <result column="create_user_name" property="createUserName" />
+        <result column="update_user_id" property="updateUserId" />
+        <result column="update_user_name" property="updateUserName" />
+        <result column="is_del" property="isDel" />
+        <result column="status" property="status" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, btn_code, btn_name, menu_id, create_user_id, create_user_name, update_user_id, update_user_name, is_del, status
+    </sql>
+
+</mapper>
