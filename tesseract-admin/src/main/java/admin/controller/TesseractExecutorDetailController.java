@@ -22,6 +22,7 @@ import static tesseract.core.constant.CommonConstant.HEARTBEAT_MAPPING_SUFFIX;
  */
 @RestController
 @RequestMapping("/tesseract-executor-detail")
+@Validated
 public class TesseractExecutorDetailController {
     @Autowired
     private ITesseractExecutorDetailService executorDetailService;

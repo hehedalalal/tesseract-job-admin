@@ -171,6 +171,7 @@ public class DefaultSchedulerThreadPool implements ISchedulerThreadPool {
                     }
                 }
             }
+            log.info("线程:{}退出", this.getName());
         }
     }
 }

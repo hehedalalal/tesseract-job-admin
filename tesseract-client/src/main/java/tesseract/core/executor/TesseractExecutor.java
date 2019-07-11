@@ -43,7 +43,7 @@ public class TesseractExecutor {
      */
     private final String THREAD_NAME_FORMATTER = "TesseractExecutorThread-%d";
     private final AtomicInteger ATOMIC_INTEGER = new AtomicInteger(0);
-    private final ThreadPoolExecutor THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(10,
+    private final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(10,
             800, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1000)
             , r -> new Thread(r, String.format(THREAD_NAME_FORMATTER, ATOMIC_INTEGER.getAndIncrement())));
     /**
@@ -61,10 +61,13 @@ public class TesseractExecutor {
      * @return
      */
     public TesseractExecutorResponse execute(TesseractExecutorRequest tesseractExecutorRequest) {
-        THREAD_POOL_EXECUTOR.execute(new WorkRunnable(tesseractExecutorRequest, clientFeignService, this.adminServerAddress));
+        threadPoolExecutor.execute(new WorkRunnable(tesseractExecutorRequest, clientFeignService, this.adminServerAddress));
         return TesseractExecutorResponse.builder().status(TesseractExecutorResponse.SUCCESS_STATUS).body("成功进入队列").build();
     }
 
+    public ThreadPoolExecutor getThreadPoolExecutor() {
+        return threadPoolExecutor;
+    }
 
     /**
      * 属性初始化完毕后开始注册

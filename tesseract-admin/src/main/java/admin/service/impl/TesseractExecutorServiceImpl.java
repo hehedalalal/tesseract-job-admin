@@ -56,6 +56,7 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
     private ITesseractJobDetailService jobDetailService;
 
     @Override
+    @Transactional
     public TesseractAdminRegistryResDTO registry(TesseractAdminRegistryRequest tesseractAdminRegistryRequest) throws Exception {
         @NotBlank String ip = tesseractAdminRegistryRequest.getIp();
         @NotNull Integer port = tesseractAdminRegistryRequest.getPort();
@@ -138,7 +139,7 @@ public class TesseractExecutorServiceImpl extends ServiceImpl<TesseractExecutorM
                         noTriggerList.add(triggerName);
                         return;
                     }
-                    //检测执行器器是否存在
+                    //检测执行器是否存在
                     @NotNull Integer executorId = trigger.getExecutorId();
                     TesseractExecutor executor = executorService.getById(executorId);
                     if (executor == null) {

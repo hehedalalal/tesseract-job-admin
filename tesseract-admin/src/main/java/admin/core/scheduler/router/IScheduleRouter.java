@@ -6,5 +6,5 @@ import admin.entity.TesseractExecutorDetail;
 import java.util.List;
 
 public interface IScheduleRouter {
-    TesseractExecutorDetail routerExecutor(List<TesseractExecutorDetail> tesseractExecutorList);
+    TesseractExecutorDetail routerExecutor(List<TesseractExecutorDetail> tesseractExecutorDetailList);
 }

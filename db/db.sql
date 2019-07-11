@@ -66,6 +66,7 @@ create table tesseract_executor_detail
 (
     id          int unsigned primary key auto_increment,
     executor_id int unsigned not null,
+    load_factor      double(4,2) not null,
     socket      varchar(255) not null,
     create_time bigint       not null,
     update_time bigint       not null,

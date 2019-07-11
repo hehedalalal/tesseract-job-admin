@@ -32,6 +32,8 @@ public class TesseractExecutorDetail implements Serializable {
 
     private String socket;
 
+    private Double loadFactor;
+
     private Long createTime;
 
     private Long updateTime;

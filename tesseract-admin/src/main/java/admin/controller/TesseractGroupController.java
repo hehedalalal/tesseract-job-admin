@@ -27,9 +27,17 @@ import javax.validation.constraints.NotNull;
  */
 @RestController
 @RequestMapping("/tesseract-group")
+@Validated
 public class TesseractGroupController {
     @Autowired
     private ITesseractGroupService groupService;
+
+
+    @RequestMapping("/allGroup")
+    public CommonResponseVO allGroup() {
+        return CommonResponseVO.success(groupService.list());
+    }
+
 
     @RequestMapping("/groupList")
     public CommonResponseVO groupList(@NotNull @Min(1) Integer currentPage

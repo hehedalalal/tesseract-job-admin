@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 @Data
 @AllArgsConstructor
@@ -12,4 +13,14 @@ import javax.validation.constraints.NotBlank;
 public class TesseractHeartbeatRequest {
     @NotBlank
     private String socket;
+    @NotNull
+    Integer activeCount;
+    @NotNull
+    Integer corePoolSize;
+    @NotNull
+    Integer maximumPoolSize;
+    @NotNull
+    Integer poolSize;
+    @NotNull
+    Integer queueSize;
 }

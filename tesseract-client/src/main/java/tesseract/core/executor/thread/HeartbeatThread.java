@@ -3,11 +3,13 @@ package tesseract.core.executor.thread;
 import lombok.extern.slf4j.Slf4j;
 import tesseract.core.dto.TesseractExecutorResponse;
 import tesseract.core.dto.TesseractHeartbeatRequest;
+import tesseract.core.executor.TesseractExecutor;
 import tesseract.core.lifecycle.IThreadLifycycle;
 import tesseract.feignService.IClientFeignService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import static tesseract.core.constant.CommonConstant.*;
 
@@ -22,6 +24,7 @@ public class HeartbeatThread extends Thread implements IThreadLifycycle {
     private Integer port;
     private RegistryThread registryThread;
     private Integer heartIntervalTime = 10 * 1000;
+    private TesseractExecutor tesseractExecutor;
 
     public HeartbeatThread(IClientFeignService clientFeignService, String adminServerAddress, String ip, Integer port) {
         super("HeartbeatThread");
@@ -78,7 +81,19 @@ public class HeartbeatThread extends Thread implements IThreadLifycycle {
 
     private void heartbeat() {
         try {
-            TesseractHeartbeatRequest tesseractHeartbeatRequest = new TesseractHeartbeatRequest(String.format(SOCKET_FORMATTER, ip, port));
+            TesseractHeartbeatRequest tesseractHeartbeatRequest = new TesseractHeartbeatRequest();
+            ThreadPoolExecutor threadPoolExecutor = tesseractExecutor.getThreadPoolExecutor();
+            int activeCount = threadPoolExecutor.getActiveCount();
+            int corePoolSize = threadPoolExecutor.getCorePoolSize();
+            int maximumPoolSize = threadPoolExecutor.getMaximumPoolSize();
+            int poolSize = threadPoolExecutor.getPoolSize();
+            int queueSize = threadPoolExecutor.getQueue().size();
+            tesseractHeartbeatRequest.setActiveCount(activeCount);
+            tesseractHeartbeatRequest.setCorePoolSize(corePoolSize);
+            tesseractHeartbeatRequest.setMaximumPoolSize(maximumPoolSize);
+            tesseractHeartbeatRequest.setPoolSize(poolSize);
+            tesseractHeartbeatRequest.setQueueSize(queueSize);
+            tesseractHeartbeatRequest.setSocket(String.format(SOCKET_FORMATTER, ip, port));
             TesseractExecutorResponse response = clientFeignService.heartbeat(new URI(adminServerAddress + HEARTBEAT_MAPPING), tesseractHeartbeatRequest);
             if (response.getStatus() == TesseractExecutorResponse.SUCCESS_STATUS) {
                 log.info("心跳成功");

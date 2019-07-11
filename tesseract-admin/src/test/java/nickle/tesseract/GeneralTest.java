@@ -1,8 +1,11 @@
 package nickle.tesseract;
 
 import admin.core.scheduler.CronExpression;
+import admin.core.scheduler.router.impl.LoadFactorRouter;
+import admin.entity.TesseractExecutorDetail;
 import admin.entity.TesseractLog;
 import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.junit.Test;
 
@@ -13,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * 〈〉
@@ -57,5 +61,19 @@ public class GeneralTest {
         TesseractLog log = new TesseractLog();
         Function<TesseractLog, String> getClassName = TesseractLog::getClassName;
         System.out.println(getClassName.apply(log));
+    }
+
+    @Test
+    public void testRouter() {
+        LoadFactorRouter loadFactorRouter = new LoadFactorRouter();
+        List<TesseractExecutorDetail> tesseractExecutorDetailList = Lists.newArrayList();
+        TesseractExecutorDetail tesseractExecutorDetail = new TesseractExecutorDetail();
+        tesseractExecutorDetail.setLoadFactor(100D);
+        TesseractExecutorDetail tesseractExecutorDetail1 = new TesseractExecutorDetail();
+        tesseractExecutorDetail1.setLoadFactor(200D);
+        tesseractExecutorDetailList.add(tesseractExecutorDetail);
+        tesseractExecutorDetailList.add(tesseractExecutorDetail1);
+        loadFactorRouter.routerExecutor(tesseractExecutorDetailList);
+        System.out.println(tesseractExecutorDetailList);
     }
 }

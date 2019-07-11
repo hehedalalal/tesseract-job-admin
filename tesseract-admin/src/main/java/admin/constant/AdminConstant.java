@@ -2,6 +2,7 @@ package admin.constant;
 
 import admin.core.scheduler.router.IScheduleRouter;
 import admin.core.scheduler.router.impl.HashRouter;
+import admin.core.scheduler.router.impl.LoadFactorRouter;
 import admin.core.scheduler.router.impl.PollingRouter;
 
 import java.util.HashMap;
@@ -31,10 +32,12 @@ public class AdminConstant {
      */
     public static final Integer SCHEDULER_STRATEGY_HASH = 0;
     public static final Integer SCHEDULER_STRATEGY_POLLING = 1;
+    public static final Integer SCHEDULER_STRATEGY_LOADFACTOR = 1;
     public static final Map<Integer, IScheduleRouter> SCHEDULE_ROUTER_MAP = new HashMap<Integer, IScheduleRouter>() {
         {
             put(SCHEDULER_STRATEGY_HASH, new HashRouter());
             put(SCHEDULER_STRATEGY_POLLING, new PollingRouter());
+            put(SCHEDULER_STRATEGY_LOADFACTOR, new LoadFactorRouter());
         }
     };
     /**

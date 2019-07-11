@@ -51,8 +51,14 @@ public class TesseractExecutorDetailServiceImpl extends ServiceImpl<TesseractExe
             checkFiredTrigger(executorDetail);
             throw new TesseractException(EXECUTOR_DETAIL_NOT_FIND, "机器已失效");
         }
+        executorDetail.setLoadFactor(caculateLoader(heartBeatRequest));
         executorDetail.setUpdateTime(System.currentTimeMillis());
         updateById(executorDetail);
+    }
+
+    private Double caculateLoader(TesseractHeartbeatRequest heartBeatRequest) {
+        //目前先以阻塞队列大小来做负载
+        return Double.valueOf(heartBeatRequest.getQueueSize());
     }
 
     @Override
