@@ -28,7 +28,7 @@ public class TesseractExecutorDetailController {
     private ITesseractExecutorDetailService executorDetailService;
 
     @RequestMapping(HEARTBEAT_MAPPING_SUFFIX)
-    private TesseractExecutorResponse heartBeat(@Validated @RequestBody TesseractHeartbeatRequest heartBeatRequest) {
+    public TesseractExecutorResponse heartBeat(@Validated @RequestBody TesseractHeartbeatRequest heartBeatRequest) {
         executorDetailService.heartBeat(heartBeatRequest);
         return TesseractExecutorResponse.SUCCESS;
     }

@@ -108,7 +108,7 @@ public class TesseractUserController {
     }
 
     @RequestMapping("/getUserCount")
-    private CommonResponseVO getUserCount() {
+    public CommonResponseVO getUserCount() {
         return CommonResponseVO.success(tesseractUserService.count());
     }
 
@@ -118,7 +118,7 @@ public class TesseractUserController {
      * @return
      */
     @RequestMapping("/statisticsUser")
-    private CommonResponseVO statisticsUser() {
+    public CommonResponseVO statisticsUser() {
         return CommonResponseVO.success(tesseractUserService.statisticsUser());
     }
 }

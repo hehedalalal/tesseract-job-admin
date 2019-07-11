@@ -64,7 +64,7 @@ public class TesseractLogController {
     }
 
     @RequestMapping("/getLogCount")
-    private CommonResponseVO getLogCount() {
+    public CommonResponseVO getLogCount() {
         return CommonResponseVO.success(logService.count());
     }
 
@@ -74,7 +74,7 @@ public class TesseractLogController {
      * @return
      */
     @RequestMapping("/statisticsLogLine")
-    private CommonResponseVO statisticsLogLine() {
+    public CommonResponseVO statisticsLogLine() {
         return CommonResponseVO.success(logService.statisticsLogLine());
     }
 
@@ -84,7 +84,7 @@ public class TesseractLogController {
      * @return
      */
     @RequestMapping("/statisticsLogPie")
-    private CommonResponseVO statisticsLogPie() {
+    public CommonResponseVO statisticsLogPie() {
         return CommonResponseVO.success(logService.statisticsLogPie());
     }
 
